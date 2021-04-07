@@ -18,7 +18,7 @@ let package = Package(
     .target(
       name: "mdbx-ios",
       dependencies: ["mdbx-framework"]),
-    .binaryTarget(name: "mdbx_framework",
+    .binaryTarget(name: "mdbx-framework",
                   path: "mdbx_framework.xcframework.zip")
   ]
 )
