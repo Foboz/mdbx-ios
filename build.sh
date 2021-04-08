@@ -1,11 +1,8 @@
-# call make?
-
 # Make with ios-toolchain
+MAKE_SCRIPT="cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../../ios-cmake/ios.toolchain.cmake -DPLATFORM=OS64COMBINED -DENABLE_BITCODE=ON -DCMAKE_C_FLAGS_DEBUG=-Wno-error=shorten-64-to-32 -DCMAKE_C_FLAGS_RELEASE=-Wno-error=shorten-64-to-32 -DMDBX_BUILD_SHARED_LIBRARY=0 -DMDBX_ENABLE_TESTS=0"
 
-#MAKE_SCRIPT="cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../../ios-cmake/ios.toolchain.cmake -DPLATFORM=OS64COMBINED -DENABLE_BITCODE=ON -DCMAKE_C_FLAGS_DEBUG=-Wno-error=shorten-64-to-32 -DCMAKE_C_FLAGS_RELEASE=-Wno-error=shorten-64-to-32 -DMDBX_BUILD_SHARED_LIBRARY=0 -DMDBX_ENABLE_TESTS=0"
-#
-#$(cd libmdbx && mkdir build)
-#$(cd libmdbx/build && ${MAKE_SCRIPT})
+$(cd libmdbx && mkdir build)
+$(cd libmdbx/build && ${MAKE_SCRIPT})
 
 # Replace defines to fix compilation for iOS 13-
 BAD_DEFINE="(!defined(__MAC_OS_X_VERSION_MIN_REQUIRED)"
@@ -14,11 +11,7 @@ DEFINE_FILE="libmdbx/mdbx.h++"
 
 sed -i -e "s/${BAD_DEFINE}/${FIXED_DEFINE}/g" $DEFINE_FILE
 
-#$(cd libmdbx && rm -rf build)
-
-
-
-#
+# Build
 cd libmdbx-ios
 
 ARCHIVES=archives
@@ -28,15 +21,7 @@ XCFRAMEWORK_NAME=libmdbx_ios.xcframework
 XCFRAMEWORKZIP_NAME=libmdbx_ios.xcframework.zip
 SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 BUILD_PATH=`dirname $SCRIPT`
-#
-##echo "Preparing mcl..."
-##echo "Applying patch"
-##$(cd Sources/mcl && git reset --hard && git apply ../../patches/mcl.patch.diff)
-#
-##echo "Preparing bls..."
-##echo "Applying patch"
-##$(cd Sources/bls && git reset --hard && git apply ../../patches/bls.patch.diff)
-#
+
 BUILD_MATRIX_WIDTH=5
 buildmatrix=()
 #               PLATFORM            PLATFORM_EXTRAS     ARCH      EXCLUDED_ARCHS    BCMAPS_INCLUDED
@@ -102,14 +87,6 @@ while [ $i -lt ${count} ]
 
     i=$[$i+1]
 done
-#
-##echo "Reverting mcl..."
-##$(cd Sources/mcl && git reset --hard)
-#
-##echo "Reverting bls..."
-##$(cd Sources/bls && git reset --hard)
-
-echo $FRAMEWORKS
 
 rm -r ${XCFRAMEWORK_NAME}
 xcodebuild -create-xcframework ${FRAMEWORKS} -output ${XCFRAMEWORK_NAME}
@@ -118,5 +95,15 @@ XCFRAMEWORKZIP_PATH=../${XCFRAMEWORKZIP_NAME}
 rm -r ${XCFRAMEWORKZIP_PATH}
 zip -vr ${XCFRAMEWORKZIP_PATH} ${XCFRAMEWORK_NAME} -x "*.DS_Store"
 echo "XCFFramework checksum: " $(swift package compute-checksum ${XCFRAMEWORKZIP_PATH})
+
+# Remove xcframework
+rm -r ${XCFRAMEWORK_NAME}
+# Remove archives
+rm -r ${ARCHIVES}
+# libmdbx
+cd ../libmdbx
+git reset --hard
+rm -rf build
+rm mdbx.h++-e
 
 open ${BUILD_PATH}
