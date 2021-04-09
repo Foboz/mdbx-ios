@@ -11,7 +11,7 @@ import XCTest
 final class EnvironmentTests: XCTestCase {
   func testSomething() {
     let env = MDBXEnvironment()
-    env.create()
+    try? env.create()
     XCTAssertTrue(true)
   }
 }
