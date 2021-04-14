@@ -133,6 +133,12 @@ enum MDBXError: LocalizedError {
   /// Overlapping read and write transactions for the current thread
   case transactionsOverlapping
   case lastAddedErrorCode
+  /// Environment should be created first
+  case notCreated
+  /// Environment was already created
+  case alreadyCreated
+  /// Attempt of double-opening of environment
+  case alreadyOpened
   case ENODATA
   case EINVAL
   case EACCESS
@@ -179,6 +185,9 @@ enum MDBXError: LocalizedError {
     case .threadMismatch:           return libmdbx_ios.MDBX_THREAD_MISMATCH.rawValue
     case .transactionsOverlapping:  return libmdbx_ios.MDBX_TXN_OVERLAPPING.rawValue
     case .lastAddedErrorCode:       return libmdbx_ios.MDBX_LAST_ADDED_ERRCODE.rawValue
+    case .notCreated:               return -30414
+    case .alreadyOpened:            return -30413
+    case .alreadyCreated:           return -30412
     case .ENODATA:                  return libmdbx_ios.MDBX_ENODATA.rawValue
     case .EINVAL:                   return libmdbx_ios.MDBX_EINVAL.rawValue
     case .EACCESS:                  return libmdbx_ios.MDBX_EACCESS.rawValue

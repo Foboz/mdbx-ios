@@ -475,3 +475,9 @@ extension MDBXEnvironmentFlags: MDBXEnvironmentFlagsSyncModes {
    */
   static let utterlyNoSync = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_UTTERLY_NOSYNC.rawValue)
 }
+
+internal extension MDBXEnvironmentFlags {
+  var MDBX_env_flags_t: MDBX_env_flags_t {
+    libmdbx_ios.MDBX_env_flags_t(self.rawValue)
+  }
+}
