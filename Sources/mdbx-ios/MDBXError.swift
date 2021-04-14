@@ -133,11 +133,20 @@ enum MDBXError: LocalizedError {
   /// Overlapping read and write transactions for the current thread
   case transactionsOverlapping
   case lastAddedErrorCode
-  /// Environment should be created first
+  /**
+ Environment should be created first
+   - Tag: MDBXError.notCreated
+ */
   case notCreated
-  /// Environment was already created
+  /**
+   Environment was already created
+   - Tag: MDBXError.alreadyCreated
+   */
   case alreadyCreated
-  /// Attempt of double-opening of environment
+  /**
+   Attempt of double-opening of environment
+   - Tag: MDBXError.alreadyOpened
+   */
   case alreadyOpened
   case ENODATA
   case EINVAL

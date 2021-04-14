@@ -48,7 +48,10 @@ public struct MDBXEnvironmentMode: OptionSet {
    */
   public static let executeOrSearchPermissionBit = MDBXEnvironmentMode(rawValue: S_IXUSR)
   /**
-   This is equivalent to [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]), [.writePermissionBit](x-source-tag://[EnvironmentMode.writePermissionBit]), [.executeOrSearchPermissionBit](x-source-tag://[EnvironmentMode.executeOrSearchPermissionBit])].
+   This is equivalent to
+   [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]),
+   [.writePermissionBit](x-source-tag://[EnvironmentMode.writePermissionBit]),
+   [.executeOrSearchPermissionBit](x-source-tag://[EnvironmentMode.executeOrSearchPermissionBit])].
    */
   public static let readWriteExecutePermission: MDBXEnvironmentMode = [.readPermissionBit, .writePermissionBit, .executeOrSearchPermissionBit]
   /**
@@ -70,7 +73,10 @@ public struct MDBXEnvironmentMode: OptionSet {
    */
   public static let executeOrSearchPermissionGroupBit = MDBXEnvironmentMode(rawValue: S_IXGRP)
   /**
-   This is equivalent to [[.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]), [.writePermissionGroupBit](x-source-tag://[EnvironmentMode.writePermissionGroupBit]), [.executeOrSearchPermissionGroupBit](x-source-tag://[EnvironmentMode.executeOrSearchPermissionGroupBit])].
+   This is equivalent to
+   [[.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]),
+   [.writePermissionGroupBit](x-source-tag://[EnvironmentMode.writePermissionGroupBit]),
+   [.executeOrSearchPermissionGroupBit](x-source-tag://[EnvironmentMode.executeOrSearchPermissionGroupBit])].
    */
   public static let readWriteExecutePermissionGroup: MDBXEnvironmentMode = [.readPermissionGroupBit, .writePermissionGroupBit, .executeOrSearchPermissionGroupBit]
   /**
@@ -92,15 +98,26 @@ public struct MDBXEnvironmentMode: OptionSet {
    */
   public static let executeOrSearchPermissionOtherBit = MDBXEnvironmentMode(rawValue: S_IXOTH)
   /**
-   This is equivalent to [[.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit]), [.writePermissionOtherBit](x-source-tag://[EnvironmentMode.writePermissionOtherBit]), [.executeOrSearchOtherBit](x-source-tag://[EnvironmentMode.executeOrSearchOtherBit])].
+   This is equivalent to
+   [[.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit]),
+   [.writePermissionOtherBit](x-source-tag://[EnvironmentMode.writePermissionOtherBit]),
+   [.executeOrSearchOtherBit](x-source-tag://[EnvironmentMode.executeOrSearchOtherBit])].
    */
   public static let readWriteExecutePermissionOther: MDBXEnvironmentMode = [.readPermissionOtherBit, .writePermissionOtherBit, .executeOrSearchPermissionOtherBit]
   /**
-   This is equivalent to [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]), [.writePermissionBit](x-source-tag://[EnvironmentMode.writePermissionBit]), [.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]), [.writePermissionGroupBit](x-source-tag://[EnvironmentMode.writePermissionGroupBit]), [.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit])].
+   This is equivalent to
+   [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]),
+   [.writePermissionBit](x-source-tag://[EnvironmentMode.writePermissionBit]),
+   [.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]),
+   [.writePermissionGroupBit](x-source-tag://[EnvironmentMode.writePermissionGroupBit]),
+   [.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit])].
    */
   public static let iOSPermission: MDBXEnvironmentMode = [.readPermissionBit, .writePermissionBit, .readPermissionGroupBit, .writePermissionGroupBit, .readPermissionOtherBit]
   /**
-   This is equivalent to [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]), [.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]), [.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit])].
+   This is equivalent to
+   [[.readPermissionBit](x-source-tag://[EnvironmentMode.readPermissionBit]),
+   [.readPermissionGroupBit](x-source-tag://[EnvironmentMode.readPermissionGroupBit]),
+   [.readPermissionOtherBit](x-source-tag://[EnvironmentMode.readPermissionOtherBit])].
    */
   public static let readOnlyPermission: MDBXEnvironmentMode = [.readPermissionBit, .readPermissionGroupBit, .readPermissionOtherBit]
 }

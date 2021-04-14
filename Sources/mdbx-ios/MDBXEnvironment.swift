@@ -8,6 +8,17 @@
 import Foundation
 import libmdbx_ios
 
+/**
+ Opaque structure for a database environment.
+ 
+ An environment supports multiple key-value sub-databases (aka key-value spaces or tables), all residing in the same shared-memory map.
+ 
+ # Reference
+    - [create()](x-source-tag://[MDBXEnvironment.create])
+    - [close()](x-source-tag://[MDBXEnvironment.close])
+ 
+ - Tag: MDBX_env
+ */
 internal typealias MDBX_env = OpaquePointer
 
 class MDBXEnvironment {
@@ -31,17 +42,19 @@ class MDBXEnvironment {
   /**
    Create an MDBX environment instance.
    
-   This function allocates memory for a \ref MDBX_env structure. To release
-   the allocated memory and discard the handle, call \ref mdbx_env_close().
-   Before the handle may be used, it must be opened using \ref mdbx_env_open().
+   This function allocates memory for a [MDBX_env](x-source-tag://[MDBX_env]) structure. To release
+   the allocated memory and discard the handle, call [close()](x-source-tag://[MDBXEnvironment.close]).
+   Before the handle may be used, it must be opened using [open()](x-source-tag://[MDBXEnvironment.open]).
    
    Various other options may also need to be set before opening the handle,
    e.g. \ref mdbx_env_set_geometry(), \ref mdbx_env_set_maxreaders(),
    \ref mdbx_env_set_maxdbs(), depending on usage requirements.
    
    - Throws:
-      - alreadyCreated:
-        If environment was alread opened
+      - [alreadyCreated](x-source-tag://[MDBXError.alreadyCreated]):
+        If environment already opened
+   
+   - Tag: MDBXEnvironment.create
    */
 
   func create() throws {
@@ -59,30 +72,37 @@ class MDBXEnvironment {
   /**
    Open an environment instance.
    
-   Indifferently this function will fails or not, the \ref mdbx_env_close() must
-   be called later to discard the \ref MDBX_env handle and release associated
+   Indifferently this function will fails or not, the [close()](x-source-tag://[MDBXEnvironment.close]) must
+   be called later to discard the [MDBX_env](x-source-tag://[MDBX_env]) handle and release associated
    resources.
    
-   Flags set by mdbx_env_set_flags() are also used:
-   - \ref MDBX_NOSUBDIR, \ref MDBX_RDONLY, \ref MDBX_EXCLUSIVE,
-    \ref MDBX_WRITEMAP, \ref MDBX_NOTLS, \ref MDBX_NORDAHEAD,
-    \ref MDBX_NOMEMINIT, \ref MDBX_COALESCE, \ref MDBX_LIFORECLAIM.
-    See \ref env_flags section.
+   - Flags set by mdbx_env_set_flags() are also used:
+      - [noSubDir](x-source-tag://[MDBXEnvironmentFlags.noSubDir])
+      - [readOnly](x-source-tag://[MDBXEnvironmentFlags.readOnly])
+      - [exclusive](x-source-tag://[MDBXEnvironmentFlags.exclusive])
+      - [writeMap](x-source-tag://[MDBXEnvironmentFlags.writeMap])
+      - [noTLS](x-source-tag://[MDBXEnvironmentFlags.noTLS])
+      - [noReadAhead](x-source-tag://[MDBXEnvironmentFlags.noReadAhead])
+      - [noMemoryInit](x-source-tag://[MDBXEnvironmentFlags.noMemoryInit])
+      - [coalesce](x-source-tag://[MDBXEnvironmentFlags.coalesce])
+      - [lifoReclaim](x-source-tag://[MDBXEnvironmentFlags.lifoReclaim])
+      - [noMetaSync](x-source-tag://[MDBXEnvironmentFlags.noMetaSync])
+      - [safeNoSync](x-source-tag://[MDBXEnvironmentFlags.safeNoSync])
+      - [utterlyNoSync](x-source-tag://[MDBXEnvironmentFlags.utterlyNoSync])
    
-   - \ref MDBX_NOMETASYNC, \ref MDBX_SAFE_NOSYNC, \ref MDBX_UTTERLY_NOSYNC.
-    See \ref sync_modes section.
+      # Reference
+      - [flags](x-source-tag://[MDBXEnvironmentFlags])
+      - [syncModes](x-source-tag://[MDBXEnvironmentFlags.SyncModes])
    
-   - Note:
+   # Note:
     `MDB_NOLOCK` flag don't supported by MDBX, try use \ref MDBX_EXCLUSIVE as a replacement.
    
-   - Note:
+   # Note:
     MDBX don't allow to mix processes with different \ref MDBX_SAFE_NOSYNC flags on the same environment.
     In such case \ref MDBX_INCOMPATIBLE will be returned.
    
-   If the database is already exist and parameters specified early by
-   \ref mdbx_env_set_geometry() are incompatible (i.e. for instance, different
-   page size) then \ref mdbx_env_open() will return \ref MDBX_INCOMPATIBLE
-   error.
+   If the database is already exist and parameters specified early by \ref mdbx_env_set_geometry() are incompatible (i.e. for instance, different
+   page size) then \ref mdbx_env_open() will return \ref MDBX_INCOMPATIBLE error.
    
    - Parameters:
       - pathname:
@@ -123,6 +143,8 @@ class MDBXEnvironment {
         inconsistent state after a system crash.
       - MDBX_TOO_LARGE:
         Database is too large for this process, i.e. 32-bit process tries to open >4Gb database.
+   
+   - Tag: MDBXEnvironment.open
    */
   func open(pathname: String, flags: MDBXEnvironmentFlags, mode: MDBXEnvironmentMode) throws {
     guard self._state == .created else {
@@ -138,10 +160,8 @@ class MDBXEnvironment {
   /**
    Close the environment and release the memory map.
    
-   Only a single thread may call this function. All transactions, databases,
-   and cursors must already be closed before calling this function. Attempts
-   to use any such handles after calling this function will cause a `SIGSEGV`.
-   The environment handle will be freed and must not be used again after this
+   Only a single thread may call this function. All transactions, databases, and cursors must already be closed before calling this function. Attempts
+   to use any such handles after calling this function will cause a `SIGSEGV`. The environment handle will be freed and must not be used again after this
    call.
    
    - Parameters:
@@ -155,8 +175,7 @@ class MDBXEnvironment {
       - MDBX_BUSY
         The write transaction is running by other thread, in such case \ref MDBX_env instance has NOT be destroyed
         not released!
-        - Note:
-          If any OTHER error code was returned then given MDBX_env instance has been destroyed and released.
+        # Note: If any OTHER error code was returned then given MDBX_env instance has been destroyed and released.
    
       - MDBX_EBADSIGN:  Environment handle already closed or not valid,
         i.e. \ref mdbx_env_close() was already called for the `env` or was not created by \ref mdbx_env_create().
@@ -167,6 +186,8 @@ class MDBXEnvironment {
    
       - MDBX_EIO:
         An error occurred during synchronization.
+   
+   - Tag: MDBXEnvironment.close
    */
   func close(_ dontSync: Bool = false) {
     guard self._state == .opened else {
