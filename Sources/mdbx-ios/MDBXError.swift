@@ -58,94 +58,155 @@ enum MDBXError: LocalizedError {
     }
   }
   
-  /// key/data pair already exists
+  /**
+   * key/data pair already exists
+   */
   case keyExist
-  /// The first LMDB-compatible defined error code
+  /**
+   *  The first LMDB-compatible defined error code
+   */
   case firstLMDBErrorCode
-  /// key/data pair not found (EOF)
+  /**
+   * key/data pair not found (EOF)
+   */
   case notFound
-  /// Requested page not found - this usually indicates corruption
+  /**
+   * Requested page not found - this usually indicates corruption
+   */
   case pageNotFound
-  /// Database is corrupted (page was wrong type and so on)
+  /**
+   * Database is corrupted (page was wrong type and so on)
+   */
   case corrupted
-  /// Environment had fatal error, i.e. update of meta page failed and so on.
+  /**
+   * Environment had fatal error, i.e. update of meta page failed and so on.
+   */
   case panic
-  /// DB file version mismatch with libmdbx
+  /**
+   * DB file version mismatch with libmdbx
+   */
   case versionMismatch
-  /// File is not a valid MDBX file
+  /**
+   * File is not a valid MDBX file
+   */
   case invalid
-  /// Environment mapsize reached
+  /**
+   * Environment mapsize reached
+   */
   case mapFull
-  /// Environment maxdbs reached
+  /**
+   * Environment maxdbs reached
+   */
   case dbsFull
-  /// Environment maxreaders reached
+  /**
+   * Environment maxreaders reached
+   */
   case readersFull
-  /// Transaction has too many dirty pages, i.e transaction too big
+  /**
+   * Transaction has too many dirty pages, i.e transaction too big
+   */
   case txnFull
-  /// Cursor stack too deep - this usually indicates corruption, i.e branch-pages loop
+  /**
+   * Cursor stack too deep - this usually indicates corruption, i.e branch-pages loop
+   */
   case cursorFull
-  /// Page has not enough space - internal error
+  /**
+   * Page has not enough space - internal error
+   */
   case pageFull
-  /// Database engine was unable to extend mapping, e.g. since address space is unavailable or busy. This can mean:
-  ///
-  /// - Database size extended by other process beyond to environment mapsize and engine was unable to extend mapping while starting read transaction. Environment should be reopened to continue.
-  /// - Engine was unable to extend mapping during write transaction or explicit call of mdbx_env_set_geometry().
+  /**
+   * Database engine was unable to extend mapping, e.g. since address space is unavailable or busy. This can mean:
+   *
+   * - Database size extended by other process beyond to environment mapsize and engine was unable to extend mapping while starting read transaction. Environment should be reopened to continue.
+   * - Engine was unable to extend mapping during write transaction or explicit call of mdbx_env_set_geometry().
+   */
   case unableExtendMapsize
-  /// Environment or database is not compatible with the requested operation or the specified flags. This can mean:
-  ///
-  /// - The operation expects an MDBX_DUPSORT / MDBX_DUPFIXED database.
-  /// - Opening a named DB when the unnamed DB has MDBX_DUPSORT / MDBX_INTEGERKEY.
-  /// - Accessing a data record as a database, or vice versa.
-  /// - The database was dropped and recreated with different flags.
+  /** Environment or database is not compatible with the requested operation or the specified flags. This can mean:
+   *
+   * - The operation expects an MDBX_DUPSORT / MDBX_DUPFIXED database.
+   * - Opening a named DB when the unnamed DB has MDBX_DUPSORT / MDBX_INTEGERKEY.
+   * - Accessing a data record as a database, or vice versa.
+   * - The database was dropped and recreated with different flags.
+   */
   case incompatible
-  /// Invalid reuse of reader locktable slot, e.g. read-transaction already run for current thread
+  /**
+   * Invalid reuse of reader locktable slot, e.g. read-transaction already run for current thread
+   */
   case badReadSlot
-  /// Transaction is not valid for requested operation, e.g. had errored and be must aborted, has a child, or is invalid
+  /**
+   * Transaction is not valid for requested operation, e.g. had errored and be must aborted, has a child, or is invalid
+   */
   case badTransaction
-  /// Invalid size or alignment of key or data for target database, either invalid subDB name
+  /**
+   * Invalid size or alignment of key or data for target database, either invalid subDB name
+   */
   case badValSize
-  /// The specified DBI-handle is invalid or changed by another thread/transaction
+  /**
+   * The specified DBI-handle is invalid or changed by another thread/transaction
+   */
   case badDatabase
-  /// Unexpected internal error, transaction should be aborted
+  /**
+   * Unexpected internal error, transaction should be aborted
+   */
   case problem
-  /// The last LMDB-compatible defined error code
+  /**
+   * The last LMDB-compatible defined error code
+   */
   case lastLMDBErrorCode
-  /// Another write transaction is running or environment is already used while opening with MDBX_EXCLUSIVE flag
+  /**
+   * Another write transaction is running or environment is already used while opening with MDBX_EXCLUSIVE flag
+   */
   case busy
-  /// The first of MDBX-added error codes
+  /**
+   * The first of MDBX-added error codes
+   */
   case firstAddedErrorCode
-  /// The specified key has more than one associated value
+  /**
+   * The specified key has more than one associated value
+   */
   case multipleValues
-  /// Bad signature of a runtime object(s)
-  ///
-  /// This can mean:
-  /// - memory corruption or double-free;
-  /// - ABI version mismatch (rare case);
+  /**
+   * Bad signature of a runtime object(s)
+   *
+   * This can mean:
+   * - memory corruption or double-free;
+   * - ABI version mismatch (rare case);
+   */
   case badSignature
-  /// Database should be recovered, but this could NOT be done for now since it opened in read-only mode
+  /**
+   * Database should be recovered, but this could NOT be done for now since it opened in read-only mode
+   */
   case wannaRecovery
-  /// The given key value is mismatched to the current cursor position
+  /**
+   * The given key value is mismatched to the current cursor position
+   */
   case keyMismatch
-  /// Database is too large for current system, e.g. could NOT be mapped into RAM.
+  /**
+   * Database is too large for current system, e.g. could NOT be mapped into RAM.
+   */
   case tooLarge
-  /// A thread has attempted to use a not owned object, e.g. a transaction that started by another thread.
+  /**
+   * A thread has attempted to use a not owned object, e.g. a transaction that started by another thread.
+   */
   case threadMismatch
-  /// Overlapping read and write transactions for the current thread
+  /**
+   * Overlapping read and write transactions for the current thread
+   */
   case transactionsOverlapping
   case lastAddedErrorCode
   /**
- Environment should be created first
-   - Tag: MDBXError.notCreated
- */
+   * Environment should be created first
+   * - Tag: MDBXError.notCreated
+   */
   case notCreated
   /**
-   Environment was already created
-   - Tag: MDBXError.alreadyCreated
+   * Environment was already created
+   * - Tag: MDBXError.alreadyCreated
    */
   case alreadyCreated
   /**
-   Attempt of double-opening of environment
-   - Tag: MDBXError.alreadyOpened
+   * Attempt of double-opening of environment
+   * - Tag: MDBXError.alreadyOpened
    */
   case alreadyOpened
   case ENODATA
