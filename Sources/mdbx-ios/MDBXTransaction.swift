@@ -29,10 +29,27 @@ class MDBXTransaction {
     case `break`
   }
   
-  internal let environment: MDBXEnvironment
   internal var _txn: MDBX_txn!
   internal var _state: MDBXTransactionState = .unknown
   
+  /**
+   * Returns the transaction's MDBX_env.
+   */
+  let environment: MDBXEnvironment
+  
+  
+  /**
+   * Return the transaction's flags.
+   *
+   * This returns the flags associated with this transaction.
+   *
+   * # Returns:
+   *   A transaction flags, valid if input is an valid transaction, otherwise -1.
+   */
+  var flags: MDBXTransactionFlags {
+    let flags = mdbx_txn_flags(self._txn)
+    return MDBXTransactionFlags(rawValue: UInt32(flags))
+  }
   
   /**
    * Return the transaction's ID.
@@ -262,6 +279,68 @@ class MDBXTransaction {
    */
   func reset() throws {
     let code = mdbx_txn_reset(self._txn)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  
+  /**
+   * Renew a read-only transaction.
+   *
+   * This acquires a new reader lock for a transaction handle that had been released by \ref mdbx_txn_reset(). It must be called before a reset
+   * transaction may be used again.
+   *
+   * - Throws:
+   * - MDBX_PANIC:
+   *   A fatal error occurred earlier and the environment must be shut down.
+   * - MDBX_BAD_TXN:
+   *   Transaction is already finished or never began.
+   * - MDBX_EBADSIGN:
+   *   Transaction object has invalid signature, e.g. transaction was already terminated
+   *   or memory was corrupted.
+   * - MDBX_THREAD_MISMATCH:
+   *   Given transaction is not owned by current thread.
+   * - MDBX_EINVAL:
+   *   Transaction handle is NULL.
+   */
+  func renew() throws {
+    let code = mdbx_txn_renew(self._txn)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /**
+   * Abandon all the operations of the transaction instead of saving them.
+   *
+   * The transaction handle is freed. It and its cursors must not be used again after this call, except with \ref mdbx_cursor_renew() and
+   * \ref mdbx_cursor_close().
+   *
+   * If the current thread is not eligible to manage the transaction then the \ref MDBX_THREAD_MISMATCH error will returned. Otherwise the transaction
+   * will be aborted and its handle is freed. Thus, a result other than \ref MDBX_THREAD_MISMATCH means that the transaction is terminated:
+   *  - Resources are released;
+   *  - Transaction handle is invalid;
+   *  - Cursor(s) associated with transaction must not be used, except with
+   *    \ref mdbx_cursor_renew() and \ref mdbx_cursor_close().
+   *    Such cursor(s) must be closed explicitly by \ref mdbx_cursor_close()
+   *    before or after transaction abort, either can be reused with
+   *    \ref mdbx_cursor_renew() until it will be explicitly closed by
+   *    \ref mdbx_cursor_close().
+   *
+   * - Throws:
+   *   - MDBX_PANIC:
+   *     A fatal error occurred earlier and the environment must be shut down.
+   *   - MDBX_BAD_TXN:
+   *     Transaction is already finished or never began.
+   *   - MDBX_EBADSIGN:
+   *     Transaction object has invalid signature, e.g. transaction was already terminated
+   *     or memory was corrupted.
+   *   - MDBX_THREAD_MISMATCH:
+   *     Given transaction is not owned by current thread.
+   *   - MDBX_EINVAL
+   *     Transaction handle is NULL.
+   */
+  func abort() throws {
+    let code = mdbx_txn_abort(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }
