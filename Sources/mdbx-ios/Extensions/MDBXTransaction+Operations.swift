@@ -88,7 +88,7 @@ extension MDBXTransaction {
    * \retval MDBX_NOTFOUND      The key was not in the database.
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
-  func getValueEqualOrGreater(for key: Data, database: MDBXDatabase) throws -> Data {
+  func getValueEqualOrGreater(for key: inout Data, database: MDBXDatabase) throws -> Data {
     var mdbxKey = key.mdbxVal
 
     let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
@@ -104,7 +104,8 @@ extension MDBXTransaction {
       
       return data
     }
-        
+    
+    key = mdbxKey.data
     return mdbxVal.data
   }
   
@@ -138,7 +139,7 @@ extension MDBXTransaction {
    *                               by current thread.
    * \retval MDBX_NOTFOUND  The key was not in the database.
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
-  func getValueEx(for key: Data, database: MDBXDatabase, valuesCount: inout Int) throws -> Data {
+  func getValueEx(for key: inout Data, database: MDBXDatabase, valuesCount: inout Int) throws -> Data {
     var mdbxKey = key.mdbxVal
 
     let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
@@ -156,7 +157,8 @@ extension MDBXTransaction {
       
       return data
     }
-        
+    
+    key = mdbxKey.data
     return mdbxVal.data
   }
   

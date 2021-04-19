@@ -45,18 +45,21 @@ final class MDBXCursor {
    *
    * \returns Created cursor handle or NULL in case out of memory. */
 
+  // TODO: Check context nil ?
   func create(context: inout Any?) throws {
     guard self._state == .unknown else {
       throw MDBXError.alreadyCreated
     }
     
-    try withUnsafeMutableBytes(of: &context) { contextPointer in
+    _cursor = try withUnsafeMutableBytes(of: &context) { contextPointer in
       guard let _cursor = mdbx_cursor_create(contextPointer.baseAddress) else {
         throw MDBXError.ENOMEM
       }
       
-      self._cursor = _cursor
+      return _cursor
     }
+    
+    _state = .created
   }
   
   /** \brief Create a cursor handle for the specified transaction and DBI handle.
@@ -93,15 +96,56 @@ final class MDBXCursor {
    * \retval MDBX_EINVAL  An invalid parameter was specified. */
 
   func open(transaction: MDBXTransaction, database: MDBXDatabase) throws {
-    guard self._state == .created else {
-      if self._state == .unknown {
-        throw MDBXError.notCreated
-      } else {
+    guard self._state == .unknown else {
         throw MDBXError.alreadyOpened
-      }
-      
-      //mdbx_cursor_open(transaction._txn, database._dbi, <#T##cursor: UnsafeMutablePointer<OpaquePointer?>!##UnsafeMutablePointer<OpaquePointer?>!#>)
     }
+    
+    let code = mdbx_cursor_open(transaction._txn, database._dbi, &_cursor)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      _state = .opened
+      return
+    }
+    throw error
+  }
+  
+  /** \brief Bind cursor to specified transaction and DBI handle.
+   * \ingroup c_cursors
+   *
+   * Using of the `mdbx_cursor_bind()` is equivalent to calling
+   * \ref mdbx_cursor_renew() but with specifying an arbitrary dbi handle.
+   *
+   * An capable of operation cursor is associated with a specific transaction and
+   * database. The cursor may be associated with a new transaction,
+   * and referencing a new or the same database handle as it was created with.
+   * This may be done whether the previous transaction is live or dead.
+   *
+   * \note In contrast to LMDB, the MDBX required that any opened cursors can be
+   * reused and must be freed explicitly, regardless ones was opened in a
+   * read-only or write transaction. The REASON for this is eliminates ambiguity
+   * which helps to avoid errors such as: use-after-free, double-free, i.e.
+   * memory corruption and segfaults.
+   *
+   * \param [in] txn      A transaction handle returned by \ref mdbx_txn_begin().
+   * \param [in] dbi      A database handle returned by \ref mdbx_dbi_open().
+   * \param [out] cursor  A cursor handle returned by \ref mdbx_cursor_create().
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
+   *                               by current thread.
+   * \retval MDBX_EINVAL  An invalid parameter was specified. */
+
+  func bind(transaction: MDBXTransaction, database: MDBXDatabase) throws {
+    guard _state == .created else { throw MDBXError.alreadyOpened }
+    
+    let code = mdbx_cursor_bind(transaction._txn, _cursor, database._dbi)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      _state = .opened
+      return
+    }
+    throw error
   }
   
   /** \brief Close a cursor handle.

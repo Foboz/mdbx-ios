@@ -103,7 +103,7 @@ extension MDBXCursor {
    * \retval MDBX_NOTFOUND  No matching key found.
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
 
-  func getValue(key: Data, operation: MDBXCursorOperations) throws -> Data {
+  func getValue(key: inout Data, operation: MDBXCursorOperations) throws -> Data {
     var mdbxKey = key.mdbxVal
     var mdbxData = MDBX_val()
     
@@ -119,6 +119,7 @@ extension MDBXCursor {
       }
     }
     
+    key = mdbxKey.data
     return mdbxData.data
   }
   
