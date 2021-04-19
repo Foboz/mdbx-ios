@@ -22,7 +22,7 @@ import libmdbx_ios
  */
 internal typealias MDBX_txn = OpaquePointer
 
-class MDBXTransaction {
+final class MDBXTransaction {
   internal enum MDBXTransactionState {
     case unknown
     case begin
