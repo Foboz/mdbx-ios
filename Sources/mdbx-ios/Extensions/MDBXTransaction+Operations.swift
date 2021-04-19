@@ -59,6 +59,107 @@ extension MDBXTransaction {
     return mdbxVal.data
   }
   
+  /** \brief Get equal or great item from a database.
+   * \ingroup c_crud
+   *
+   * Briefly this function does the same as \ref mdbx_get() with a few
+   * differences:
+   * 1. Return equal or great (due comparison function) key-value
+   *    pair, but not only exactly matching with the key.
+   * 2. On success return \ref MDBX_SUCCESS if key found exactly,
+   *    and \ref MDBX_RESULT_TRUE otherwise. Moreover, for databases with
+   *    \ref MDBX_DUPSORT flag the data argument also will be used to match over
+   *    multi-value/duplicates, and \ref MDBX_SUCCESS will be returned only when
+   *    BOTH the key and the data match exactly.
+   * 3. Updates BOTH the key and the data for pointing to the actual key-value
+   *    pair inside the database.
+   *
+   * \param [in] txn           A transaction handle returned
+   *                           by \ref mdbx_txn_begin().
+   * \param [in] dbi           A database handle returned by \ref mdbx_dbi_open().
+   * \param [in,out] key       The key to search for in the database.
+   * \param [in,out] data      The data corresponding to the key.
+   *
+   * \returns A non-zero error value on failure and \ref MDBX_RESULT_FALSE
+   *          or \ref MDBX_RESULT_TRUE on success (as described above).
+   *          Some possible errors are:
+   * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
+   *                               by current thread.
+   * \retval MDBX_NOTFOUND      The key was not in the database.
+   * \retval MDBX_EINVAL        An invalid parameter was specified. */
+
+  func getValueEqualOrGreater(for key: Data, database: MDBXDatabase) throws -> Data {
+    var mdbxKey = key.mdbxVal
+
+    let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
+      var data: MDBX_val = .init()
+      try withUnsafeMutablePointer(to: &data) { pointer in
+        let code = mdbx_get_equal_or_great(_txn, database._dbi, keyPointer, pointer)
+        guard code != 0, let error = MDBXError(code: code) else {
+          return
+        }
+
+        throw error
+      }
+      
+      return data
+    }
+        
+    return mdbxVal.data
+  }
+  
+  /** \brief Get items from a database
+   * and optionally number of data items for a given key.
+   *
+   * \ingroup c_crud
+   *
+   * Briefly this function does the same as \ref mdbx_get() with a few
+   * differences:
+   *  1. If values_count is NOT NULL, then returns the count
+   *     of multi-values/duplicates for a given key.
+   *  2. Updates BOTH the key and the data for pointing to the actual key-value
+   *     pair inside the database.
+   *
+   * \param [in] txn           A transaction handle returned
+   *                           by \ref mdbx_txn_begin().
+   * \param [in] dbi           A database handle returned by \ref mdbx_dbi_open().
+   * \param [in,out] key       The key to search for in the database.
+   * \param [in,out] data      The data corresponding to the key.
+   * \param [out] values_count The optional address to return number of values
+   *                           associated with given key:
+   *                            = 0 - in case \ref MDBX_NOTFOUND error;
+   *                            = 1 - exactly for databases
+   *                                  WITHOUT \ref MDBX_DUPSORT;
+   *                            >= 1 for databases WITH \ref MDBX_DUPSORT.
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
+   *                               by current thread.
+   * \retval MDBX_NOTFOUND  The key was not in the database.
+   * \retval MDBX_EINVAL    An invalid parameter was specified. */
+  func getValueEx(for key: Data, database: MDBXDatabase, valuesCount: inout Int) throws -> Data {
+    var mdbxKey = key.mdbxVal
+
+    let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
+      var data: MDBX_val = .init()
+      try withUnsafeMutablePointer(to: &data) { pointer in
+        try withUnsafeMutablePointer(to: &valuesCount) { countPointer in
+          let code = mdbx_get_ex(_txn, database._dbi, keyPointer, pointer, countPointer)
+          guard code != 0, let error = MDBXError(code: code) else {
+            return
+          }
+
+          throw error
+        }
+      }
+      
+      return data
+    }
+        
+    return mdbxVal.data
+  }
+  
   /** \brief Store items into a database.
    * \ingroup c_crud
    *
@@ -291,6 +392,95 @@ extension MDBXTransaction {
 
           throw error
         }
+      }
+    }
+  }
+  
+  /** \brief Compare two keys according to a particular database.
+   * \ingroup c_crud
+   *
+   * This returns a comparison as if the two data items were keys in the
+   * specified database.
+   *
+   * \warning There ss a Undefined behavior if one of arguments is invalid.
+   *
+   * \param [in] txn   A transaction handle returned by \ref mdbx_txn_begin().
+   * \param [in] dbi   A database handle returned by \ref mdbx_dbi_open().
+   * \param [in] a     The first item to compare.
+   * \param [in] b     The second item to compare.
+   *
+   * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
+
+  func compare(a: Data, b: Data, database: MDBXDatabase) -> Int32 {
+    var mdbxA = a.mdbxVal
+    var mdbxB = b.mdbxVal
+    
+    return withUnsafeMutablePointer(to: &mdbxA) { aPointer in
+      withUnsafeMutablePointer(to: &mdbxB) { bPointer in
+        return mdbx_cmp(_txn, database._dbi, aPointer, bPointer)
+      }
+    }
+  }
+  
+  /** \brief Sequence generation for a database.
+   * \ingroup c_crud
+   *
+   * The function allows to create a linear sequence of unique positive integers
+   * for each database. The function can be called for a read transaction to
+   * retrieve the current sequence value, and the increment must be zero.
+   * Sequence changes become visible outside the current write transaction after
+   * it is committed, and discarded on abort.
+   *
+   * \param [in] txn        A transaction handle returned
+   *                        by \ref mdbx_txn_begin().
+   * \param [in] dbi        A database handle returned by \ref mdbx_dbi_open().
+   * \param [out] result    The optional address where the value of sequence
+   *                        before the change will be stored.
+   * \param [in] increment  Value to increase the sequence,
+   *                        must be 0 for read-only transactions.
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_RESULT_TRUE   Increasing the sequence has resulted in an
+   *                            overflow and therefore cannot be executed. */
+
+  func dbiSequence(database: MDBXDatabase, increment: UInt64) throws -> UInt64 {
+    var result: UInt64 = 0
+    try withUnsafeMutablePointer(to: &result) { pointer in
+      let code = mdbx_dbi_sequence(_txn, database._dbi, pointer, increment)
+      
+      guard code != 0, let error = MDBXError(code: code) else {
+        return
+      }
+
+      throw error
+    }
+    
+    return result
+  }
+  
+  /** \brief Compare two data items according to a particular database.
+   * \ingroup c_crud
+   *
+   * This returns a comparison as if the two items were data items of the
+   * specified database.
+   *
+   * \warning There ss a Undefined behavior if one of arguments is invalid.
+   *
+   * \param [in] txn   A transaction handle returned by \ref mdbx_txn_begin().
+   * \param [in] dbi   A database handle returned by \ref mdbx_dbi_open().
+   * \param [in] a     The first item to compare.
+   * \param [in] b     The second item to compare.
+   *
+   * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
+
+  func databaseCompare(a: Data, b: Data, database: MDBXDatabase) -> Int32 {
+    var mdbxA = a.mdbxVal
+    var mdbxB = b.mdbxVal
+    
+    return withUnsafeMutablePointer(to: &mdbxA) { aPointer in
+      withUnsafeMutablePointer(to: &mdbxB) { bPointer in
+        return mdbx_dcmp(_txn, database._dbi, aPointer, bPointer)
       }
     }
   }
