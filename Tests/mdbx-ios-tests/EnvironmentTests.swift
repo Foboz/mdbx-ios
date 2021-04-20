@@ -13,7 +13,7 @@ final class EnvironmentTests: XCTestCase {
     let env = MDBXEnvironment()
     do {
       try env.create()
-      try env.open(pathname: "test.mdbx", flags: .envDefaults, mode: .iOSPermission)
+      try env.open(path: "test.mdbx", flags: .envDefaults, mode: .iOSPermission)
       let tx = MDBXTransaction(env)
       try tx.begin(flags: .readOnly)
       
@@ -25,10 +25,6 @@ final class EnvironmentTests: XCTestCase {
       try tx.break()
       try tx.break()
       
-      
-      
-      debugPrint(test)
-//      debugPrint(tx.context as? String)
       XCTAssertTrue(true)
     } catch {
       debugPrint(error)

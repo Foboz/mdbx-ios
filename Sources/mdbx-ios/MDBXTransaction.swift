@@ -9,16 +9,16 @@ import Foundation
 import libmdbx_ios
 
 /**
- Opaque structure for a transaction handle.
-  
- All database operations require a transaction handle. Transactions may be read-only or read-write.
- 
- # Reference
-    - \see mdbx_txn_begin()
-    - \see mdbx_txn_commit()
-    - \see mdbx_txn_abort()
-
- - Tag: MDBX_txn
+ * Opaque structure for a transaction handle.
+ *
+ * All database operations require a transaction handle. Transactions may be read-only or read-write.
+ *
+ * # Reference
+ *   - \see mdbx_txn_begin()
+ *   - \see mdbx_txn_commit()
+ *   - \see mdbx_txn_abort()
+ *
+ * - Tag: MDBX_txn
  */
 internal typealias MDBX_txn = OpaquePointer
 
@@ -36,7 +36,6 @@ final class MDBXTransaction {
    * Returns the transaction's MDBX_env.
    */
   let environment: MDBXEnvironment
-  
   
   /**
    * Return the transaction's flags.
@@ -103,11 +102,13 @@ final class MDBXTransaction {
    *    - flags
    *    Special options for this transaction. This parameter must be set to 0 or by bitwise OR'ing together one
    *    or more of the values described here:
-   *      - \ref MDBX_RDONLY   This transaction will not perform any write operations.
+   *      - MDBX_RDONLY
+   *        This transaction will not perform any write operations.
    *
-   *      - \ref MDBX_TXN_TRY  Do not block when starting a write transaction.
+   *      - MDBX_TXN_TRY
+   *        Do not block when starting a write transaction.
    *
-   *      - \ref MDBX_SAFE_NOSYNC, \ref MDBX_NOMETASYNC.
+   *      - MDBX_SAFE_NOSYNC, MDBX_NOMETASYNC.
    *        Do not sync data to disk corresponding to \ref MDBX_NOMETASYNC or \ref MDBX_SAFE_NOSYNC description.
    *        \see sync_modes
    *
@@ -119,8 +120,7 @@ final class MDBXTransaction {
    *    - MDBX_PANIC:
    *      A fatal error occurred earlier and the environment must be shut down.
    *    - MDBX_UNABLE_EXTEND_MAPSIZE:
-   *      Another process wrote data beyond this MDBX_env's mapsize and this
-   *      environment map must be resized as well.
+   *      Another process wrote data beyond this MDBX_env's mapsize and this environment map must be resized as well.
    *      See \ref mdbx_env_set_mapsize().
    *    - MDBX_READERS_FULL:
    *      A read-only transaction was requested and the reader lock table is full.
@@ -175,7 +175,7 @@ final class MDBXTransaction {
    *
    * - Parameters:
    *   - context:
-   *     ctx  An arbitrary pointer for whatever the application needs.
+   *     An arbitrary pointer for whatever the application needs.
    */
   func unsafeSetContext<T>(_ context: inout T) {
     guard self._state != .unknown else { return }
@@ -250,7 +250,6 @@ final class MDBXTransaction {
     throw error
   }
   
-  
   /**
    * Reset a read-only transaction.
    *
@@ -282,7 +281,6 @@ final class MDBXTransaction {
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }
-  
   
   /**
    * Renew a read-only transaction.
