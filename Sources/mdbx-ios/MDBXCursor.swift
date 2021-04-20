@@ -17,7 +17,7 @@ final class MDBXCursor {
     case opened
   }
   
-  private var _state = MDBXCursorState.unknown
+  fileprivate var _state = MDBXCursorState.unknown
   internal var _cursor: MDBX_cursor!
   
   /** \brief Create a cursor handle but not bind it to transaction nor DBI handle.
@@ -148,6 +148,179 @@ final class MDBXCursor {
     throw error
   }
   
+  /** \brief Copy cursor position and state.
+   * \ingroup c_cursors
+   *
+   * \param [in] src       A source cursor handle returned
+   * by \ref mdbx_cursor_create() or \ref mdbx_cursor_open().
+   *
+   * \param [in,out] dest  A destination cursor handle returned
+   * by \ref mdbx_cursor_create() or \ref mdbx_cursor_open().
+   *
+   * \returns A non-zero error value on failure and 0 on success. */
+
+  func copy(cursor: MDBXCursor) throws {
+    let code = mdbx_cursor_copy(cursor._cursor, _cursor)
+    guard code != 0, let error = MDBXError(code: code) else {
+      _state = cursor._state
+      return
+    }
+    throw error
+  }
+  
+  /** \brief Return the cursor's database handle.
+   * \ingroup c_cursors
+   *
+   * \param [in] cursor  A cursor handle returned by \ref mdbx_cursor_open(). */
+
+  func dbi() -> MDBXDatabase {
+    let dbi = mdbx_cursor_dbi(_cursor)
+    return MDBXDatabase(dbi: dbi)
+  }
+  
+  /** \brief Determines whether the cursor is pointed to a key-value pair or not,
+   * i.e. was not positioned or points to the end of data.
+   * \ingroup c_cursors
+   *
+   * \param [in] cursor    A cursor handle returned by \ref mdbx_cursor_open().
+   *
+   * \returns A \ref MDBX_RESULT_TRUE or \ref MDBX_RESULT_FALSE value,
+   *          otherwise the error code:
+   * \retval MDBX_RESULT_TRUE    No more data available or cursor not
+   *                             positioned
+   * \retval MDBX_RESULT_FALSE   A data is available
+   * \retval Otherwise the error code */
+
+  func eof() throws -> Bool {
+    let code = mdbx_cursor_eof(_cursor)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return code == MDBX_RESULT_TRUE.rawValue
+    }
+    throw error
+  }
+  
+  /** \brief Get the application information associated with the MDBX_cursor.
+   * \ingroup c_cursors
+   * \see mdbx_cursor_set_userctx()
+   *
+   * \param [in] cursor  An cursor handle returned by \ref mdbx_cursor_create()
+   *                     or \ref mdbx_cursor_open().
+   * \returns The pointer which was passed via the `context` parameter
+   *          of `mdbx_cursor_create()` or set by \ref mdbx_cursor_set_userctx(),
+   *          or `NULL` if something wrong. */
+
+  func unsafeGetContext<T>() -> T? {
+    guard let contextPointer = mdbx_cursor_get_userctx(_cursor) else { return nil }
+    
+    return contextPointer.load(as: T.self)
+  }
+  
+  /** \brief Determines whether the cursor is pointed to the first key-value pair
+   * or not. \ingroup c_cursors
+   *
+   * \param [in] cursor    A cursor handle returned by \ref mdbx_cursor_open().
+   *
+   * \returns A MDBX_RESULT_TRUE or MDBX_RESULT_FALSE value,
+   *          otherwise the error code:
+   * \retval MDBX_RESULT_TRUE   Cursor positioned to the first key-value pair
+   * \retval MDBX_RESULT_FALSE  Cursor NOT positioned to the first key-value
+   * pair \retval Otherwise the error code */
+
+  func onFirst() throws -> Bool {
+    let code = mdbx_cursor_on_first(_cursor)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return code == MDBX_RESULT_TRUE.rawValue
+    }
+    throw error
+  }
+  
+  /** \brief Determines whether the cursor is pointed to the last key-value pair
+   * or not. \ingroup c_cursors
+   *
+   * \param [in] cursor    A cursor handle returned by \ref mdbx_cursor_open().
+   *
+   * \returns A \ref MDBX_RESULT_TRUE or \ref MDBX_RESULT_FALSE value,
+   *          otherwise the error code:
+   * \retval MDBX_RESULT_TRUE   Cursor positioned to the last key-value pair
+   * \retval MDBX_RESULT_FALSE  Cursor NOT positioned to the last key-value pair
+   * \retval Otherwise the error code */
+
+  func onLast() throws -> Bool {
+    let code = mdbx_cursor_on_last(_cursor)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return code == MDBX_RESULT_TRUE.rawValue
+    }
+    throw error
+  }
+  
+  /** \brief Renew a cursor handle.
+   * \ingroup c_cursors
+   *
+   * An capable of operation cursor is associated with a specific transaction and
+   * database. The cursor may be associated with a new transaction,
+   * and referencing a new or the same database handle as it was created with.
+   * This may be done whether the previous transaction is live or dead.
+   *
+   * Using of the `mdbx_cursor_renew()` is equivalent to calling
+   * \ref mdbx_cursor_bind() with the DBI handle that previously
+   * the cursor was used with.
+   *
+   * \note In contrast to LMDB, the MDBX allow any cursor to be re-used by using
+   * \ref mdbx_cursor_renew(), to avoid unnecessary malloc/free overhead until it
+   * freed by \ref mdbx_cursor_close().
+   *
+   * \param [in] txn      A transaction handle returned by \ref mdbx_txn_begin().
+   * \param [in] cursor   A cursor handle returned by \ref mdbx_cursor_open().
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
+   *                               by current thread.
+   * \retval MDBX_EINVAL  An invalid parameter was specified. */
+
+  func renew(transaction: MDBXTransaction) throws {
+    let code = mdbx_cursor_renew(transaction._txn, _cursor)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return
+    }
+    throw error
+  }
+  
+  /** \brief Set application information associated with the \ref MDBX_cursor.
+   * \ingroup c_cursors
+   * \see mdbx_cursor_get_userctx()
+   *
+   * \param [in] cursor  An cursor handle returned by \ref mdbx_cursor_create()
+   *                     or \ref mdbx_cursor_open().
+   * \param [in] ctx     An arbitrary pointer for whatever the application needs.
+   *
+   * \returns A non-zero error value on failure and 0 on success. */
+  
+  func unsafeSetContext<T>(_ context: inout T) throws {
+    guard self._state != .unknown else { return }
+    
+    let code = withUnsafeMutableBytes(of: &context, { contextPointer in
+      mdbx_cursor_set_userctx(_cursor, contextPointer.baseAddress)
+    })
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return
+    }
+    throw error
+  }
+  
+//  func transaction() -> MDBXTransaction {
+//    let txn = mdbx_cursor_txn(_cursor)
+//    let transaction = MDBXTransaction(<#MDBXEnvironment#>)
+//    transaction._txn = txn
+//    
+//    return transaction
+//  }
+
   /** \brief Close a cursor handle.
    * \ingroup c_cursors
    *
