@@ -9,16 +9,16 @@ import Foundation
 import libmdbx_ios
 
 /**
- Opaque structure for a transaction handle.
-  
- All database operations require a transaction handle. Transactions may be read-only or read-write.
- 
- # Reference
-    - \see mdbx_txn_begin()
-    - \see mdbx_txn_commit()
-    - \see mdbx_txn_abort()
-
- - Tag: MDBX_txn
+ * Opaque structure for a transaction handle.
+ *
+ * All database operations require a transaction handle. Transactions may be read-only or read-write.
+ *
+ * # Reference
+ *   - \see mdbx_txn_begin()
+ *   - \see mdbx_txn_commit()
+ *   - \see mdbx_txn_abort()
+ *
+ * - Tag: MDBX_txn
  */
 internal typealias MDBX_txn = OpaquePointer
 
@@ -29,10 +29,26 @@ final class MDBXTransaction {
     case `break`
   }
   
-  internal let environment: MDBXEnvironment
   internal var _txn: MDBX_txn!
   internal var _state: MDBXTransactionState = .unknown
   
+  /**
+   * Returns the transaction's MDBX_env.
+   */
+  let environment: MDBXEnvironment
+  
+  /**
+   * Return the transaction's flags.
+   *
+   * This returns the flags associated with this transaction.
+   *
+   * # Returns:
+   *   A transaction flags, valid if input is an valid transaction, otherwise -1.
+   */
+  var flags: MDBXTransactionFlags {
+    let flags = mdbx_txn_flags(self._txn)
+    return MDBXTransactionFlags(rawValue: UInt32(flags))
+  }
   
   /**
    * Return the transaction's ID.
@@ -86,11 +102,13 @@ final class MDBXTransaction {
    *    - flags
    *    Special options for this transaction. This parameter must be set to 0 or by bitwise OR'ing together one
    *    or more of the values described here:
-   *      - \ref MDBX_RDONLY   This transaction will not perform any write operations.
+   *      - MDBX_RDONLY
+   *        This transaction will not perform any write operations.
    *
-   *      - \ref MDBX_TXN_TRY  Do not block when starting a write transaction.
+   *      - MDBX_TXN_TRY
+   *        Do not block when starting a write transaction.
    *
-   *      - \ref MDBX_SAFE_NOSYNC, \ref MDBX_NOMETASYNC.
+   *      - MDBX_SAFE_NOSYNC, MDBX_NOMETASYNC.
    *        Do not sync data to disk corresponding to \ref MDBX_NOMETASYNC or \ref MDBX_SAFE_NOSYNC description.
    *        \see sync_modes
    *
@@ -102,8 +120,7 @@ final class MDBXTransaction {
    *    - MDBX_PANIC:
    *      A fatal error occurred earlier and the environment must be shut down.
    *    - MDBX_UNABLE_EXTEND_MAPSIZE:
-   *      Another process wrote data beyond this MDBX_env's mapsize and this
-   *      environment map must be resized as well.
+   *      Another process wrote data beyond this MDBX_env's mapsize and this environment map must be resized as well.
    *      See \ref mdbx_env_set_mapsize().
    *    - MDBX_READERS_FULL:
    *      A read-only transaction was requested and the reader lock table is full.
@@ -158,7 +175,7 @@ final class MDBXTransaction {
    *
    * - Parameters:
    *   - context:
-   *     ctx  An arbitrary pointer for whatever the application needs.
+   *     An arbitrary pointer for whatever the application needs.
    */
   func unsafeSetContext<T>(_ context: inout T) {
     guard self._state != .unknown else { return }
@@ -233,7 +250,6 @@ final class MDBXTransaction {
     throw error
   }
   
-  
   /**
    * Reset a read-only transaction.
    *
@@ -262,6 +278,67 @@ final class MDBXTransaction {
    */
   func reset() throws {
     let code = mdbx_txn_reset(self._txn)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /**
+   * Renew a read-only transaction.
+   *
+   * This acquires a new reader lock for a transaction handle that had been released by \ref mdbx_txn_reset(). It must be called before a reset
+   * transaction may be used again.
+   *
+   * - Throws:
+   * - MDBX_PANIC:
+   *   A fatal error occurred earlier and the environment must be shut down.
+   * - MDBX_BAD_TXN:
+   *   Transaction is already finished or never began.
+   * - MDBX_EBADSIGN:
+   *   Transaction object has invalid signature, e.g. transaction was already terminated
+   *   or memory was corrupted.
+   * - MDBX_THREAD_MISMATCH:
+   *   Given transaction is not owned by current thread.
+   * - MDBX_EINVAL:
+   *   Transaction handle is NULL.
+   */
+  func renew() throws {
+    let code = mdbx_txn_renew(self._txn)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /**
+   * Abandon all the operations of the transaction instead of saving them.
+   *
+   * The transaction handle is freed. It and its cursors must not be used again after this call, except with \ref mdbx_cursor_renew() and
+   * \ref mdbx_cursor_close().
+   *
+   * If the current thread is not eligible to manage the transaction then the \ref MDBX_THREAD_MISMATCH error will returned. Otherwise the transaction
+   * will be aborted and its handle is freed. Thus, a result other than \ref MDBX_THREAD_MISMATCH means that the transaction is terminated:
+   *  - Resources are released;
+   *  - Transaction handle is invalid;
+   *  - Cursor(s) associated with transaction must not be used, except with
+   *    \ref mdbx_cursor_renew() and \ref mdbx_cursor_close().
+   *    Such cursor(s) must be closed explicitly by \ref mdbx_cursor_close()
+   *    before or after transaction abort, either can be reused with
+   *    \ref mdbx_cursor_renew() until it will be explicitly closed by
+   *    \ref mdbx_cursor_close().
+   *
+   * - Throws:
+   *   - MDBX_PANIC:
+   *     A fatal error occurred earlier and the environment must be shut down.
+   *   - MDBX_BAD_TXN:
+   *     Transaction is already finished or never began.
+   *   - MDBX_EBADSIGN:
+   *     Transaction object has invalid signature, e.g. transaction was already terminated
+   *     or memory was corrupted.
+   *   - MDBX_THREAD_MISMATCH:
+   *     Given transaction is not owned by current thread.
+   *   - MDBX_EINVAL
+   *     Transaction handle is NULL.
+   */
+  func abort() throws {
+    let code = mdbx_txn_abort(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }
