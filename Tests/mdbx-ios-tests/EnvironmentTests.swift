@@ -13,14 +13,19 @@ final class EnvironmentTests: XCTestCase {
     let env = MDBXEnvironment()
     do {
       try env.create()
-      try env.open(path: "test.mdbx", flags: .envDefaults, mode: .iOSPermission)
+      try env.open(path: "test.mdbx2", flags: .envDefaults, mode: .iOSPermission)
       let tx = MDBXTransaction(env)
-      try tx.begin(flags: .readOnly)
       
       var context: Any = "testContexthsdbfjsd bfgjhsdbfgjhdbfgjhb sdgjhbds jghbd fgjhdbgj "
-      tx.unsafeSetContext(&context)
+//      try tx.begin(flags: .readOnly, context: &context)
+      try tx.begin(flags: .readOnly)
+      try tx.unsafeSetContext(&context)
       context = "trololo?"
       let test: Any? = tx.unsafeGetContext()
+      debugPrint(test)
+      try tx.unsafeResetContext()
+      let test2: Any? = tx.unsafeGetContext()
+      debugPrint(test2)
       
       try tx.break()
       try tx.break()

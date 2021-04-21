@@ -23,14 +23,7 @@ import libmdbx_ios
 internal typealias MDBX_txn = OpaquePointer
 
 final class MDBXTransaction {
-  internal enum MDBXTransactionState {
-    case unknown
-    case begin
-    case `break`
-  }
-  
   internal var _txn: MDBX_txn!
-  internal var _state: MDBXTransactionState = .unknown
   
   /**
    * Returns the transaction's MDBX_env.
@@ -60,7 +53,6 @@ final class MDBXTransaction {
    *   A transaction ID, valid if input is an active transaction, otherwise 0.
    */
   var transactionId: UInt64 {
-    guard self._state != .unknown else { return 0 }
     return mdbx_txn_id(self._txn)
   }
   
@@ -130,27 +122,82 @@ final class MDBXTransaction {
    *    - MDBX_BUSY:
    *      The write transaction is already started by the current thread.
    */
-  func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags, context: Any? = nil) throws {
+  func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags, context: inout Any) throws {
     let code = withUnsafeMutablePointer(to: &self._txn) { pointer -> Int32 in
-      if var context = context {
-        return withUnsafeMutableBytes(of: &context, { contextPointer in
-          return mdbx_txn_begin_ex(self.environment._env,
+      return withUnsafeMutableBytes(of: &context, { contextPointer in
+        return mdbx_txn_begin_ex(self.environment._env,
+                                 parent?._txn,
+                                 flags.MDBX_txn_flags_t,
+                                 pointer,
+                                 contextPointer.baseAddress)
+      })
+    }
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Create a transaction for use with the environment.
+   * \ingroup c_transactions
+   *
+   * The transaction handle may be discarded using \ref mdbx_txn_abort()
+   * or \ref mdbx_txn_commit().
+   * \see mdbx_txn_begin_ex()
+   *
+   * \note A transaction and its cursors must only be used by a single thread,
+   * and a thread may only have a single transaction at a time. If \ref MDBX_NOTLS
+   * is in use, this does not apply to read-only transactions.
+   *
+   * \note Cursors may not span transactions.
+   *
+   * \param [in] env     An environment handle returned by \ref mdbx_env_create().
+   *
+   * \param [in] parent  If this parameter is non-NULL, the new transaction will
+   *                     be a nested transaction, with the transaction indicated
+   *                     by parent as its parent. Transactions may be nested
+   *                     to any level. A parent transaction and its cursors may
+   *                     not issue any other operations than mdbx_txn_commit and
+   *                     \ref mdbx_txn_abort() while it has active child
+   *                     transactions.
+   *
+   * \param [in] flags   Special options for this transaction. This parameter
+   *                     must be set to 0 or by bitwise OR'ing together one
+   *                     or more of the values described here:
+   *                      - \ref MDBX_RDONLY   This transaction will not perform
+   *                                           any write operations.
+   *
+   *                      - \ref MDBX_TXN_TRY  Do not block when starting
+   *                                           a write transaction.
+   *
+   *                      - \ref MDBX_SAFE_NOSYNC, \ref MDBX_NOMETASYNC.
+   *                        Do not sync data to disk corresponding
+   *                        to \ref MDBX_NOMETASYNC or \ref MDBX_SAFE_NOSYNC
+   *                        description. \see sync_modes
+   *
+   * \param [out] txn    Address where the new MDBX_txn handle will be stored.
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_PANIC         A fatal error occurred earlier and the
+   *                            environment must be shut down.
+   * \retval MDBX_UNABLE_EXTEND_MAPSIZE  Another process wrote data beyond
+   *                                     this MDBX_env's mapsize and this
+   *                                     environment map must be resized as well.
+   *                                     See \ref mdbx_env_set_mapsize().
+   * \retval MDBX_READERS_FULL  A read-only transaction was requested and
+   *                            the reader lock table is full.
+   *                            See \ref mdbx_env_set_maxreaders().
+   * \retval MDBX_ENOMEM        Out of memory.
+   * \retval MDBX_BUSY          The write transaction is already started by the
+   *                            current thread.
+   */
+  func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags) throws {
+    let code = withUnsafeMutablePointer(to: &self._txn) { pointer -> Int32 in
+      return mdbx_txn_begin(self.environment._env,
                             parent?._txn,
                             flags.MDBX_txn_flags_t,
-                            pointer,
-                            contextPointer.baseAddress)
-        })
-      } else {
-        return mdbx_txn_begin(self.environment._env,
-                          parent?._txn,
-                          flags.MDBX_txn_flags_t,
-                          pointer)
-      }
+                            pointer)
     }
-    guard code != 0, let error = MDBXError(code: code) else {
-      self._state = .begin
-      return
-    }
+    guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }
   
@@ -163,7 +210,6 @@ final class MDBXTransaction {
    *   or `NULL` if something wrong.
    */
   func unsafeGetContext<T>() -> T? {
-    guard self._state != .unknown else { return nil }
     guard let contextPointer = mdbx_txn_get_userctx(self._txn) else { return nil }
     
     return contextPointer.load(as: T.self)
@@ -177,12 +223,22 @@ final class MDBXTransaction {
    *   - context:
    *     An arbitrary pointer for whatever the application needs.
    */
-  func unsafeSetContext<T>(_ context: inout T) {
-    guard self._state != .unknown else { return }
-    
-    _ = withUnsafeMutableBytes(of: &context, { contextPointer in
+  func unsafeSetContext<T>(_ context: inout T) throws {
+    let code = withUnsafeMutableBytes(of: &context, { contextPointer in
       mdbx_txn_set_userctx(self._txn, contextPointer.baseAddress)
     })
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  
+  /**
+   * Resets mdbx transaction context
+   */
+  func unsafeResetContext() throws {
+    let code = mdbx_txn_set_userctx(self._txn, nil)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
   }
   
   /**
@@ -195,13 +251,8 @@ final class MDBXTransaction {
    * \returns A non-zero error value on failure and 0 on success.
    */
   func `break`() throws {
-    guard self._state == .begin else { return }
-    
     let code = mdbx_txn_break(self._txn)
-    guard code != 0, let error = MDBXError(code: code) else {
-      self._state = .break
-      return
-    }
+    guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }
   
@@ -243,8 +294,6 @@ final class MDBXTransaction {
    *     Out of memory.
    */
   func commit() throws {
-    guard self._state == .begin else { return }
-    
     let code = mdbx_txn_commit(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
