@@ -25,7 +25,11 @@ final class MDBXDatabase {
   
   internal var _dbi: MDBX_dbi!
   internal var _state: MDBXDatabaseState = .unknown
-    
+  
+  init(dbi: MDBX_dbi) {
+    _dbi = dbi
+  }
+  
   deinit {
     close()
   }
