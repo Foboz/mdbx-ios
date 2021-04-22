@@ -45,8 +45,7 @@ final class MDBXCursor {
    *
    * \returns Created cursor handle or NULL in case out of memory. */
 
-  // TODO: Check context nil ?
-  func create(context: inout Any?) throws {
+  func create(context: inout Any) throws {
     guard self._state == .unknown else {
       throw MDBXError.alreadyCreated
     }
@@ -59,6 +58,40 @@ final class MDBXCursor {
       return _cursor
     }
     
+    _state = .created
+  }
+  
+  /** \brief Create a cursor handle but not bind it to transaction nor DBI handle.
+   * \ingroup c_cursors
+   *
+   * An capable of operation cursor is associated with a specific transaction and
+   * database. A cursor cannot be used when its database handle is closed. Nor
+   * when its transaction has ended, except with \ref mdbx_cursor_bind() and
+   * \ref mdbx_cursor_renew().
+   * Also it can be discarded with \ref mdbx_cursor_close().
+   *
+   * A cursor must be closed explicitly always, before or after its transaction
+   * ends. It can be reused with \ref mdbx_cursor_bind()
+   * or \ref mdbx_cursor_renew() before finally closing it.
+   *
+   * \note In contrast to LMDB, the MDBX required that any opened cursors can be
+   * reused and must be freed explicitly, regardless ones was opened in a
+   * read-only or write transaction. The REASON for this is eliminates ambiguity
+   * which helps to avoid errors such as: use-after-free, double-free, i.e.
+   * memory corruption and segfaults.
+   *
+   * \param [in] context A pointer to application context to be associated with
+   *                     created cursor and could be retrieved by
+   *                     \ref mdbx_cursor_get_userctx() until cursor closed.
+   *
+   * \returns Created cursor handle or NULL in case out of memory. */
+
+  func create() throws {
+    guard self._state == .unknown else {
+      throw MDBXError.alreadyCreated
+    }
+    
+    _cursor = mdbx_cursor_create(nil)
     _state = .created
   }
   

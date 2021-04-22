@@ -27,6 +27,9 @@ final class EnvironmentTests: XCTestCase {
       let test2: Any? = tx.unsafeGetContext()
       debugPrint(test2)
       
+      let path = try env.getPath()
+      debugPrint(path)
+      
       try tx.break()
       try tx.break()
       
