@@ -97,6 +97,7 @@ func databaseDupSortDepthMask(transaction: MDBXTransaction, database: MDBXDataba
  *                               by current thread.
  * \retval MDBX_EINVAL   An invalid parameter was specified. */
 
+// TODO: check with tests
 func databaseStat(transaction: MDBXTransaction, database: MDBXDatabase) throws -> MDBXStat {
     var stat = MDBX_stat()
     let size = MemoryLayout.size(ofValue: stat)

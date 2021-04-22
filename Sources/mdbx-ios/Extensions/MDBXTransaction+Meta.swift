@@ -90,7 +90,7 @@ extension MDBXTransaction {
     try withUnsafeMutablePointer(to: &info) { pointer in
       let code = mdbx_txn_info(_txn, pointer, scanRlt)
       
-      guard code != 0, let error = MDBXError(code: result) else {
+      guard code != 0, let error = MDBXError(code: code) else {
         return
       }
       
