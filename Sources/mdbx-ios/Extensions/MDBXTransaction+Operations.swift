@@ -486,4 +486,33 @@ extension MDBXTransaction {
       }
     }
   }
+  
+  /** \brief Commit all the operations of a transaction into the database and
+   * collect latency information.
+   * \see mdbx_txn_commit()
+   * \ingroup c_statinfo
+   * \warning This function may be changed in future releases. */
+
+  func commitEx() throws -> MDBXCommitLatency {
+    var latency = MDBX_commit_latency()
+    try withUnsafeMutablePointer(to: &latency) { pointer in
+     let code = mdbx_txn_commit_ex(_txn, pointer)
+      
+      guard code != 0, let error = MDBXError(code: code) else {
+        return
+      }
+
+      throw error
+    }
+    
+    return .init(
+      preparation: latency.preparation,
+      gc: latency.gc,
+      audit: latency.audit,
+      write: latency.write,
+      sync: latency.sync,
+      ending: latency.ending,
+      whole: latency.whole
+    )
+  }
 }
