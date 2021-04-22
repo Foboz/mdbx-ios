@@ -156,21 +156,18 @@ extension MDBXEnvironment {
   
   // TODO: getPath with tests
   func getPath() throws -> String {
-    var pointer: Int8 = 0
+    var intPointer: UnsafePointer<Int8>?
     
-    return try withUnsafePointer(to: &pointer) { intPointer -> String in
-      var mutableIntPointer = intPointer as UnsafePointer<Int8>?
-      try withUnsafeMutablePointer(to: &mutableIntPointer, { pointer in
-        let code = mdbx_env_get_path(_env, pointer)
-        guard code != 0, let error = MDBXError(code: code) else { return }
-        throw error
-      })
-      guard let pathPointer = mutableIntPointer,
-            let path = String(cString: pathPointer, encoding: .utf8) else {
-        throw MDBXError.EINVAL
-      }
-      return path
+    try withUnsafeMutablePointer(to: &intPointer, { pointer in
+      let code = mdbx_env_get_path(_env, pointer)
+      guard code != 0, let error = MDBXError(code: code) else { return }
+      throw error
+    })
+    guard let pathPointer = intPointer,
+          let path = String(cString: pathPointer, encoding: .utf8) else {
+      throw MDBXError.EINVAL
     }
+    return path
   }
   
   /** \brief Return information about the MDBX environment.
