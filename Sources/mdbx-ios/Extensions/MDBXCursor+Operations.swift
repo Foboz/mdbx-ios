@@ -204,7 +204,7 @@ extension MDBXCursor {
    *                            transaction.
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
-  func put(value: Data, key: Data, flags: MDBXPutFlags) throws {
+  func put(value: inout Data, key: inout Data, flags: MDBXPutFlags) throws {
     var mdbxKey = key.mdbxVal
     var mdbxData = value.mdbxVal
     

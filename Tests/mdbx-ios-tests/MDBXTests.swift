@@ -36,10 +36,14 @@ final class MDBXTests: XCTestCase {
   
   override func tearDown() {
     super.tearDown()
-    _environment = nil
-    _transaction = nil
-    _table = nil
+    try? _transaction?.abort()
+    _cursor?.close()
     _cursor = nil
+    _transaction = nil
+    _table?.close()
+    _table = nil
+    _environment?.close()
+    _environment = nil
   }
   
   func dbPrepare() -> MDBXEnvironment? {
@@ -52,7 +56,7 @@ final class MDBXTests: XCTestCase {
       try environment.setMaxDatabases(42)
       
       let geometry = MDBXGeometry(sizeLower: -1,
-                                  sizeNow: 1024 * 1024 * 256,
+                                  sizeNow: 1024 * 32,
                                   sizeUpper: -1,
                                   growthStep: -1,
                                   shrinkThreshold: -1,
@@ -158,8 +162,9 @@ final class MDBXTests: XCTestCase {
   func testReadValue() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      var some = Data.some
       let value = try _transaction!.getValue(
-        for: Data.some,
+        for: &some,
         database: _table!
       )
       XCTAssert(value == Data.some)
@@ -171,15 +176,17 @@ final class MDBXTests: XCTestCase {
   func testReplaceValue() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
-
+      var some = Data.some
       let test = try _transaction!.getValue(
-        for: Data.some,
+        for: &some,
         database: _table!
       )
+      
+      var any = Data.any
 
       let oldData = try _transaction!.replace(
-        new: Data.any,
-        forKey: Data.some,
+        new: &any,
+        forKey: &some,
         database: _table!,
         flags: [.upsert]
       )
@@ -197,18 +204,20 @@ final class MDBXTests: XCTestCase {
   func testRemoveValue() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      var some = Data.some
       let value = try _transaction!.getValue(
-        for: Data.some,
+        for: &some,
         database: _table!
       )
       XCTAssertNotNil(value)
 
-      try _transaction!.delete(key: Data.some, database: _table!)
+      try _transaction!.delete(key: &some, database: _table!)
       do {
-        let value = try _transaction!.getValue(
-          for: Data.some,
+        _ = try _transaction!.getValue(
+          for: &some,
           database: _table!
         )
+        XCTFail("getValue should throw")
       } catch MDBXError.notFound {
         
       } catch {
@@ -233,6 +242,9 @@ extension MDBXTests {
   func dbOpen() {
     do {
       let path = FileManager.default.temporaryDirectory.appendingPathComponent("pathname_db").path
+      debugPrint("================")
+      debugPrint("DB PATH: \(path)")
+      debugPrint("================")
       try _environment?.open(path: path, flags: .envDefaults, mode: .iOSPermission)
       addTeardownBlock {
         try? FileManager.default.removeItem(atPath: path)
@@ -294,13 +306,15 @@ extension MDBXTests {
     try dbOpen_PrepareTransaction_Table_Cursor()
     try _transaction!.drop(database: _table!, delete: false)
 
+    var some = Data.some
+    var some2 = Data.some
     try _transaction!.put(
-      value: Data.some,
-      forKey: Data.some,
+      value: &some,
+      forKey: &some2,
       database: _table!,
       flags: [.upsert]
     )
-    
+
     try _transaction!.commit()
     try beginTransaction(transaction: _transaction!)
   }

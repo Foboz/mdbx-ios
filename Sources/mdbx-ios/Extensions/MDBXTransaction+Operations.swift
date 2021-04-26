@@ -39,24 +39,16 @@ extension MDBXTransaction {
    * \retval MDBX_NOTFOUND  The key was not in the database.
    * \retval MDBX_EINVAL    An invalid parameter was specified.*/
 
-  func getValue(for key: Data, database: MDBXDatabase) throws -> Data {
-    var mdbxKey = key.mdbxVal
-
-    let mdbxVal = try withUnsafePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
-      var data: MDBX_val = .init()
-      try withUnsafeMutablePointer(to: &data) { pointer in
-        let code = mdbx_get(_txn, database._dbi, keyPointer, pointer)
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
-        }
-
-        throw error
-      }
-      
-      return data
+  func getValue(for key: inout Data, database: MDBXDatabase) throws -> Data {
+    var mdbxKey = MDBX_val(data: &key)
+    
+    var data: MDBX_val = .init()
+    let code = mdbx_get(_txn, database._dbi, &mdbxKey, &data)
+    guard code != 0, let error = MDBXError(code: code) else {
+      return data.data
     }
-        
-    return mdbxVal.data
+    
+    throw error
   }
   
   /** \brief Get equal or great item from a database.
@@ -245,24 +237,19 @@ extension MDBXTransaction {
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
 
   func put(
-    value: Data,
-    forKey key: Data,
+    value: inout Data,
+    forKey key: inout Data,
     database: MDBXDatabase,
     flags: MDBXPutFlags
   ) throws {
-    var mdbxKey = key.mdbxVal
-    try withUnsafePointer(to: &mdbxKey) {  keyPointer in
-      var mdbxValue = value.mdbxVal
-      try withUnsafeMutablePointer(to: &mdbxValue) { valuePointer in
-        let code = mdbx_put(_txn, database._dbi, keyPointer, valuePointer, flags.MDBX_put_flags_t)
-        
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
-        }
-
-        throw error
-      }
+    var mdbxKey = MDBX_val(data: &key)
+    var mdbxValue = MDBX_val(data: &value)
+    
+    let code = mdbx_put(_txn, database._dbi, &mdbxKey, &mdbxValue, flags.MDBX_put_flags_t)
+    guard code != 0, let error = MDBXError(code: code) else {
+      return
     }
+    throw error
   }
   
   /** \brief Delete items from a database.
@@ -291,18 +278,10 @@ extension MDBXTransaction {
    *                       in a read-only transaction.
    * \retval MDBX_EINVAL   An invalid parameter was specified. */
 
-  func delete(value: Data? = nil, key: Data, database: MDBXDatabase) throws {
-    var mdbxKey = key.mdbxVal
-    let code = withUnsafePointer(to: &mdbxKey) { keyPointer -> Int32 in
-      var mdbxValue = value?.mdbxVal
-      if mdbxValue != nil {
-        return withUnsafeMutablePointer(to: &mdbxValue!) { valuePointer -> Int32 in
-          return mdbx_del(_txn, database._dbi, keyPointer, valuePointer)
-        }
-      } else {
-        return mdbx_del(_txn, database._dbi, keyPointer, nil)
-      }
-    }
+  func delete(value: Data? = nil, key: inout Data, database: MDBXDatabase) throws {
+    var mdbxKey = MDBX_val(data: &key)
+    
+    let code = mdbx_del(_txn, database._dbi, &mdbxKey, nil)
     
     guard code != 0, let error = MDBXError(code: code) else {
       return
@@ -378,8 +357,8 @@ extension MDBXTransaction {
    * \returns A non-zero error value on failure and 0 on success. */
 
   func replace(
-    new: Data,
-    forKey key: Data,
+    new: inout Data,
+    forKey key: inout Data,
     database: MDBXDatabase,
     flags: MDBXPutFlags
   ) throws -> Data {
@@ -418,7 +397,7 @@ extension MDBXTransaction {
    *
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
-  func compare(a: Data, b: Data, database: MDBXDatabase) -> Int32 {
+  func compare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
     var mdbxA = a.mdbxVal
     var mdbxB = b.mdbxVal
     
@@ -481,7 +460,7 @@ extension MDBXTransaction {
    *
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
-  func databaseCompare(a: Data, b: Data, database: MDBXDatabase) -> Int32 {
+  func databaseCompare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
     var mdbxA = a.mdbxVal
     var mdbxB = b.mdbxVal
     
