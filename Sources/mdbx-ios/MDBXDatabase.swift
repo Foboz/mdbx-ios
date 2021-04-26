@@ -23,11 +23,14 @@ final class MDBXDatabase {
     }
   }
   
-  internal var _dbi: MDBX_dbi!
+  internal var _dbi: MDBX_dbi = 0
   internal var _state: MDBXDatabaseState = .unknown
   
   init(dbi: MDBX_dbi) {
     _dbi = dbi
+  }
+  
+  init() {
   }
   
   deinit {
@@ -182,5 +185,5 @@ final class MDBXDatabase {
     
     mdbx_dbi_close(env._env, _dbi)
     self._state = .unknown
-  }
+  }  
 }

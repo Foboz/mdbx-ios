@@ -291,20 +291,24 @@ extension MDBXTransaction {
    *                       in a read-only transaction.
    * \retval MDBX_EINVAL   An invalid parameter was specified. */
 
-  func delete(value: Data, key: Data, database: MDBXDatabase) throws {
+  func delete(value: Data? = nil, key: Data, database: MDBXDatabase) throws {
     var mdbxKey = key.mdbxVal
-    try withUnsafePointer(to: &mdbxKey) {  keyPointer in
-      var mdbxValue = value.mdbxVal
-      try withUnsafeMutablePointer(to: &mdbxValue) { valuePointer in
-        let code = mdbx_del(_txn, database._dbi, keyPointer, valuePointer)
-        
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
+    let code = withUnsafePointer(to: &mdbxKey) { keyPointer -> Int32 in
+      var mdbxValue = value?.mdbxVal
+      if mdbxValue != nil {
+        return withUnsafeMutablePointer(to: &mdbxValue!) { valuePointer -> Int32 in
+          return mdbx_del(_txn, database._dbi, keyPointer, valuePointer)
         }
-
-        throw error
+      } else {
+        return mdbx_del(_txn, database._dbi, keyPointer, nil)
       }
     }
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return
+    }
+
+    throw error
   }
   
   /** \brief Empty or delete and close a database.
@@ -374,15 +378,14 @@ extension MDBXTransaction {
    * \returns A non-zero error value on failure and 0 on success. */
 
   func replace(
-    old: Data,
     new: Data,
     forKey key: Data,
     database: MDBXDatabase,
     flags: MDBXPutFlags
-  ) throws {
+  ) throws -> Data {
     var mdbxKey = key.mdbxVal
+    var oldMdbxValue = MDBX_val()
     try withUnsafePointer(to: &mdbxKey) {  keyPointer in
-      var oldMdbxValue = old.mdbxVal
       var newMdbxValue = new.mdbxVal
       try withUnsafeMutablePointer(to: &oldMdbxValue) { oldValuePointer in
         try withUnsafeMutablePointer(to: &newMdbxValue) { newValuePointer in
@@ -396,6 +399,8 @@ extension MDBXTransaction {
         }
       }
     }
+    
+    return oldMdbxValue.data
   }
   
   /** \brief Compare two keys according to a particular database.

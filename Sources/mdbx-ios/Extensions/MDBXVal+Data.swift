@@ -10,7 +10,11 @@ import libmdbx_ios
 
 extension MDBX_val {
   var data: Data {
-    Data(
+    guard iov_base != nil else {
+      return Data()
+    }
+    
+    return Data(
       bytesNoCopy: iov_base,
       count: iov_len,
       deallocator: .none
