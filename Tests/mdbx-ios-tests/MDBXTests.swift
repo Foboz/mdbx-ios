@@ -173,15 +173,58 @@ final class MDBXTests: XCTestCase {
     }
   }
   
+  func testReadValueEx() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      var key = Data.some
+      var valuesCount = 0
+      let value = try _transaction!.getValueEx(for: &key, database: _table!, valuesCount: &valuesCount)
+      XCTAssert(valuesCount == 1)
+      XCTAssert(value == Data.some)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCompareEqualValues() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var key1 = Data.some
+      var key2 = Data.some
+      let value = Data.some
+      
+      try writeData(key: key1, value: value)
+      try writeData(key: key2, value: value)
+      
+      let result = _transaction!.compare(a: &key1, b: &key2, database: _table!)
+      XCTAssert(result == 0)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCompareNotEqualValues() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var key1 = Data.some
+      var key2 = Data.some
+      let value1 = Data.someInt
+      let value2 = Data.veryLargeInt
+      
+      try writeData(key: key1, value: value1)
+      try writeData(key: key2, value: value2)
+      
+      let result = _transaction!.compare(a: &key1, b: &key2, database: _table!)
+      //XCTAssert(result < 0)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
   func testReplaceValue() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
       var some = Data.some
-      let test = try _transaction!.getValue(
-        for: &some,
-        database: _table!
-      )
-      
       var any = Data.any
 
       let oldData = try _transaction!.replace(
@@ -191,11 +234,12 @@ final class MDBXTests: XCTestCase {
         flags: [.upsert]
       )
 
-//      let value = try _transaction!.getValue(
-//        for: Data.some,
-//        database: _table!
-//      )
-      XCTAssert(test == Data.some)
+      let value = try _transaction!.getValue(
+        for: &some,
+        database: _table!
+      )
+      XCTAssert(oldData == Data.some)
+      XCTAssert(value == Data.any)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -217,9 +261,9 @@ final class MDBXTests: XCTestCase {
           for: &some,
           database: _table!
         )
-        XCTFail("getValue should throw")
+        XCTFail("getValue should throw not found")
       } catch MDBXError.notFound {
-        
+        XCTAssert(true)
       } catch {
         throw(error)
       }
@@ -230,8 +274,87 @@ final class MDBXTests: XCTestCase {
   
   func testTableClear() {
     do {
-      try dbOpen_PrepareTransaction_Table_Cursor()
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var value = Data.some
+      var key = Data.some
+      
+      try writeData(key: key, value: value)
       try _transaction!.drop(database: _table!, delete: false)
+      
+      do {
+        _ = try _transaction!.getValue(
+          for: &key,
+          database: _table!
+        )
+        XCTFail("getValue should throw not found")
+      } catch MDBXError.notFound {
+        XCTAssertTrue(true)
+      } catch {
+        throw(error)
+      }
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCommitEx() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      let value = Data.some
+      let key = Data.some
+      
+      try writeData(key: key, value: value, commit: false)
+      let latency = try _transaction!.commitEx()
+      XCTAssert(latency.write < 10)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorPut() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      
+      var value = Data.some
+      var key = Data.some
+      try _cursor!.put(value: &value, key: &key, flags: [.upsert])
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorRead() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      
+      var value = Data.some
+      var key = Data.some
+      try _cursor!.put(value: &value, key: &key, flags: [.upsert])
+      
+      let data = try _cursor!.getValue(key: &key, operation: [.first])
+      XCTAssert(data == value)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorDelete() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      
+      var value = Data.some
+      var key = Data.some
+      try _cursor!.put(value: &value, key: &key, flags: [.upsert])
+      
+      try _cursor!.delete(flags: [.upsert])
+      do {
+        let _ = try _cursor!.getValue(key: &key, operation: [.first])
+        XCTFail("should fail with not found error")
+      } catch MDBXError.notFound {
+        XCTAssert(true)
+      } catch {
+        XCTFail(error.localizedDescription)
+      }
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -302,21 +425,30 @@ extension MDBXTests {
     _cursor = try prepareCursor(transaction: _transaction!, database: _table!)
   }
   
-  func dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData() throws {
-    try dbOpen_PrepareTransaction_Table_Cursor()
-    try _transaction!.drop(database: _table!, delete: false)
-
-    var some = Data.some
-    var some2 = Data.some
+  func writeData(key: Data, value: Data, commit: Bool = true) throws {
+    var key = key
+    var value = value
     try _transaction!.put(
-      value: &some,
-      forKey: &some2,
+      value: &value,
+      forKey: &key,
       database: _table!,
       flags: [.upsert]
     )
 
-    try _transaction!.commit()
-    try beginTransaction(transaction: _transaction!)
+    if commit {
+      try _transaction!.commit()
+      try beginTransaction(transaction: _transaction!)
+    }
+  }
+  
+  func dbOpen_PrepareTransaction_Table_Cursor_ClearTable() throws {
+    try dbOpen_PrepareTransaction_Table_Cursor()
+    try _transaction!.drop(database: _table!, delete: false)
+  }
+  
+  func dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData() throws {
+    try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+    try writeData(key: Data.some, value: Data.some)
   }
   
   func dbOpen_PrepareTransaction_Table_Cursor_CloseCursor() throws {
@@ -331,6 +463,4 @@ extension MDBXTests {
       try transaction.commit()
     }
   }
-  
-  
 }

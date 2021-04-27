@@ -81,24 +81,15 @@ extension MDBXTransaction {
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
   func getValueEqualOrGreater(for key: inout Data, database: MDBXDatabase) throws -> Data {
-    var mdbxKey = key.mdbxVal
+    var mdbxKey = MDBX_val(data: &key)
+    var data: MDBX_val = .init()
 
-    let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
-      var data: MDBX_val = .init()
-      try withUnsafeMutablePointer(to: &data) { pointer in
-        let code = mdbx_get_equal_or_great(_txn, database._dbi, keyPointer, pointer)
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
-        }
-
-        throw error
-      }
-      
-      return data
+    let code = mdbx_get_equal_or_great(_txn, database._dbi, &mdbxKey, &data)
+    guard code != 0, let error = MDBXError(code: code) else {
+        return data.data
     }
-    
-    key = mdbxKey.data
-    return mdbxVal.data
+
+    throw error
   }
   
   /** \brief Get items from a database
@@ -132,26 +123,15 @@ extension MDBXTransaction {
    * \retval MDBX_NOTFOUND  The key was not in the database.
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
   func getValueEx(for key: inout Data, database: MDBXDatabase, valuesCount: inout Int) throws -> Data {
-    var mdbxKey = key.mdbxVal
+    var mdbxKey = MDBX_val(data: &key)
+    var data: MDBX_val = .init()
 
-    let mdbxVal = try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer -> MDBX_val in
-      var data: MDBX_val = .init()
-      try withUnsafeMutablePointer(to: &data) { pointer in
-        try withUnsafeMutablePointer(to: &valuesCount) { countPointer in
-          let code = mdbx_get_ex(_txn, database._dbi, keyPointer, pointer, countPointer)
-          guard code != 0, let error = MDBXError(code: code) else {
-            return
-          }
-
-          throw error
-        }
-      }
-      
-      return data
+    let code = mdbx_get_ex(_txn, database._dbi, &mdbxKey, &data, &valuesCount)
+    guard code != 0, let error = MDBXError(code: code) else {
+        return data.data
     }
-    
-    key = mdbxKey.data
-    return mdbxVal.data
+
+    throw error
   }
   
   /** \brief Store items into a database.
@@ -362,24 +342,18 @@ extension MDBXTransaction {
     database: MDBXDatabase,
     flags: MDBXPutFlags
   ) throws -> Data {
-    var mdbxKey = key.mdbxVal
-    var oldMdbxValue = MDBX_val()
-    try withUnsafePointer(to: &mdbxKey) {  keyPointer in
-      var newMdbxValue = new.mdbxVal
-      try withUnsafeMutablePointer(to: &oldMdbxValue) { oldValuePointer in
-        try withUnsafeMutablePointer(to: &newMdbxValue) { newValuePointer in
-          let code = mdbx_replace(_txn, database._dbi, keyPointer, newValuePointer, oldValuePointer, flags.MDBX_put_flags_t)
-          
-          guard code != 0, let error = MDBXError(code: code) else {
-            return
-          }
-
-          throw error
-        }
-      }
-    }
     
-    return oldMdbxValue.data
+    var mdbxKey = MDBX_val(data: &key)
+    var oldMdbxValue = MDBX_val()
+    var newMdbxValue = MDBX_val(data: &new)
+    
+    let code = mdbx_replace(_txn, database._dbi, &mdbxKey, &newMdbxValue, &oldMdbxValue, flags.MDBX_put_flags_t)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+        return oldMdbxValue.data
+    }
+
+    throw error
   }
   
   /** \brief Compare two keys according to a particular database.
@@ -398,14 +372,10 @@ extension MDBXTransaction {
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
   func compare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
-    var mdbxA = a.mdbxVal
-    var mdbxB = b.mdbxVal
+    var mdbxA = MDBX_val(data: &a)
+    var mdbxB = MDBX_val(data: &b)
     
-    return withUnsafeMutablePointer(to: &mdbxA) { aPointer in
-      withUnsafeMutablePointer(to: &mdbxB) { bPointer in
-        return mdbx_cmp(_txn, database._dbi, aPointer, bPointer)
-      }
-    }
+    return mdbx_cmp(_txn, database._dbi, &mdbxA, &mdbxB)
   }
   
   /** \brief Sequence generation for a database.
@@ -461,14 +431,10 @@ extension MDBXTransaction {
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
   func databaseCompare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
-    var mdbxA = a.mdbxVal
-    var mdbxB = b.mdbxVal
+    var mdbxA = MDBX_val(data: &a)
+    var mdbxB = MDBX_val(data: &b)
     
-    return withUnsafeMutablePointer(to: &mdbxA) { aPointer in
-      withUnsafeMutablePointer(to: &mdbxB) { bPointer in
-        return mdbx_dcmp(_txn, database._dbi, aPointer, bPointer)
-      }
-    }
+    return mdbx_dcmp(_txn, database._dbi, &mdbxA, &mdbxB)
   }
   
   /** \brief Commit all the operations of a transaction into the database and
