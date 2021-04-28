@@ -325,14 +325,47 @@ final class MDBXTests: XCTestCase {
   
   func testCursorRead() {
     do {
-      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable(supportDuplicates: true)
       
       var value = Data.some
       var key = Data.some
+      
+      var anyValue = Data.any
+      var anyKey = Data.any
+      
       try _cursor!.put(value: &value, key: &key, flags: [.upsert])
       
-      let data = try _cursor!.getValue(key: &key, operation: [.first])
-      XCTAssert(data == value)
+      try _cursor!.put(value: &anyValue, key: &key, flags: [.upsert])
+      
+      var valuesCount = 0
+      let _ = try _transaction?.getValueEx(for: &key, database: _table!, valuesCount: &valuesCount)
+      XCTAssert(valuesCount == 2)
+
+      try _cursor!.put(value: &anyValue, key: &anyKey, flags: [.upsert])
+      
+      let data = try _cursor!.getValue(key: &anyKey, operation: [.first, .setKey])
+      XCTAssert(data == anyValue)
+      
+      let data1 = try _cursor!.getValue(key: &key, operation: [.next])
+      XCTAssert(data1 == anyValue)
+      
+      let data2 = try _cursor!.getValue(key: &key, operation: [.next])
+      XCTAssert(data2 == value)
+      
+      var emptyKey = Data()
+      let firstValue = try _cursor!.getValue(key: &emptyKey, operation: [.first, .setLowerBound])
+      let currentData = try _cursor!.getValue(key: &emptyKey, operation: [.getCurrent])
+      
+      debugPrint("\(String(data: emptyKey, encoding: .utf8))")
+      
+      do {
+        _ = try _cursor!.getValue(key: &key, operation: [.next])
+        XCTFail("should throw not found error")
+      } catch MDBXError.notFound {
+        XCTAssert(true)
+      } catch {
+        throw error
+      }
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -389,6 +422,12 @@ extension MDBXTests {
     return db
   }
   
+  func prepareMultiTable(transaction: MDBXTransaction, create: Bool) throws -> MDBXDatabase {
+    let db = MDBXDatabase()
+    try db.open(transaction: transaction, name: "MULTIDB", flags: create ? [.create, .dupSort] : [.defaults, .dupSort])
+    return db
+  }
+  
   func prepareCursor(transaction: MDBXTransaction, database: MDBXDatabase) throws -> MDBXCursor {
     let cursor = MDBXCursor()
     try cursor.open(transaction: transaction, database: database)
@@ -425,6 +464,14 @@ extension MDBXTests {
     _cursor = try prepareCursor(transaction: _transaction!, database: _table!)
   }
   
+  func dbOpen_PrepareTransaction_MultiTable_Cursor() throws {
+    dbOpen_PrepareTransaction()
+    
+    try beginTransaction(transaction: _transaction!)
+    _table = try prepareMultiTable(transaction: _transaction!, create: true)
+    _cursor = try prepareCursor(transaction: _transaction!, database: _table!)
+  }
+  
   func writeData(key: Data, value: Data, commit: Bool = true) throws {
     var key = key
     var value = value
@@ -441,8 +488,12 @@ extension MDBXTests {
     }
   }
   
-  func dbOpen_PrepareTransaction_Table_Cursor_ClearTable() throws {
-    try dbOpen_PrepareTransaction_Table_Cursor()
+  func dbOpen_PrepareTransaction_Table_Cursor_ClearTable(supportDuplicates: Bool = false) throws {
+    if supportDuplicates {
+      try dbOpen_PrepareTransaction_MultiTable_Cursor()
+    } else {
+      try dbOpen_PrepareTransaction_Table_Cursor()
+    }
     try _transaction!.drop(database: _table!, delete: false)
   }
   
