@@ -108,11 +108,11 @@ extension MDBXCursor {
     var mdbxData = MDBX_val()
     
     let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
-    
+    key = mdbxKey.data
     guard code != 0, let error = MDBXError(code: code) else {
       return mdbxData.data
     }
-
+    
     throw error
   }
   

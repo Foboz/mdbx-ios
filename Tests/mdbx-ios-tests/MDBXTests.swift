@@ -98,12 +98,53 @@ final class MDBXTests: XCTestCase {
       self.dbClose()
     }
   }
-    
+      
   func testBeginTransaction() {
     do {
       dbOpen()
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testTransactionId() {
+    do {
+      dbOpen()
+      let transaction = prepareTransaction()
+      XCTAssert(transaction.id == 0) // inactive
+      try beginTransaction(transaction: transaction)
+      XCTAssert(transaction.id > 0) // active
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testTransactionFlags() {
+    do {
+      dbOpen()
+      let transaction = prepareTransaction()
+      try beginTransaction(transaction: transaction, readonly: true, flags: [.readOnly])
+      XCTAssertTrue(transaction.flags.contains(.readOnly))
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testTransactionIsDirty() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var data = Data.some
+      var key = Data.some
+
+      try writeData(key: key, value: data, commit: false)
+      var result = try _transaction!.isDirty(data: &key)
+
+      try _transaction!.commit()
+      try beginTransaction(transaction: _transaction!)
+      result = try _transaction!.isDirty(data: &key)
+      XCTAssertTrue(result)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -159,6 +200,20 @@ final class MDBXTests: XCTestCase {
     }
   }
   
+  func testDBIsequence() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var value = try _transaction!.dbiSequence(database: _table!, increment: 1)
+      XCTAssert(value == 0)
+      
+      try writeData(key: Data.some, value: Data.some)
+      value = try _transaction!.dbiSequence(database: _table!, increment: 1)
+      XCTAssert(value == 1)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+
   func testReadValue() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
@@ -168,6 +223,143 @@ final class MDBXTests: XCTestCase {
         database: _table!
       )
       XCTAssert(value == Data.some)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReadEqualOrGreaterValue() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      var key = Data.any
+      let value = try _transaction!.getValueEqualOrGreater(for: &key, database: _table!)
+      XCTAssert(value == Data.some)
+      XCTAssert(key == Data.some)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReadNotExistingEqualOrGreaterValue() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var key = Data.any
+      let _ = try _transaction!.getValueEqualOrGreater(for: &key, database: _table!)
+      XCTFail("should fail with not found error")
+    } catch MDBXError.notFound {
+      XCTAssert(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReadNonExistingKey() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var some = Data.some
+      _ = try _transaction!.getValue(
+        for: &some,
+        database: _table!
+      )
+      XCTFail("should throw an error")
+    } catch MDBXError.notFound {
+      XCTAssertTrue(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testInvalidInsert() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try _transaction!.break()
+      try writeData(key: Data.some, value: Data.some)
+      XCTFail("should fail")
+    } catch MDBXError.badTransaction {
+      XCTAssertTrue(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testInsertForReadonly() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      try _transaction!.break()
+      try _transaction!.abort()
+      
+      _transaction = prepareTransaction()
+      try beginTransaction(transaction: _transaction!, readonly: true, flags: [.readOnly])
+            
+      try writeData(key: Data.some, value: Data.some)
+    } catch MDBXError.EACCESS {
+      XCTAssert(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+
+  
+  func testTransactionRenew() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      try _transaction!.break()
+      try _transaction!.abort()
+      
+      let readTransaction = prepareTransaction()
+      try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+      var key = Data.some
+      _ = try readTransaction.getValue(for: &key, database: _table!)
+      try readTransaction.reset()
+      
+      do {
+        _ = try readTransaction.getValue(for: &key, database: _table!)
+      } catch MDBXError.badTransaction {
+        XCTAssertTrue(true)
+      } catch {
+        XCTFail(error.localizedDescription)
+      }
+      try readTransaction.renew()
+      _ = try readTransaction.getValue(for: &key, database: _table!)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testTransactionAbortBeforeCommit() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try writeData(key: Data.some, value: Data.some, commit: true)
+      try writeData(key: Data.any, value: Data.any, commit: false)
+
+      try _transaction!.abort()
+      
+      let readTransaction = prepareTransaction()
+      try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+
+      var key = Data.any
+      let _ = try readTransaction.getValue(for: &key, database: _table!)
+      XCTFail("should fail with notfound")
+    } catch MDBXError.notFound {
+      XCTAssertTrue(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testTransactionAbortBeforeFirstCommit() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try _transaction!.abort()
+      
+      let readTransaction = prepareTransaction()
+      try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+
+      var key = Data.any
+      let _ = try readTransaction.getValue(for: &key, database: _table!)
+      XCTFail("should fail with notfound")
+    } catch MDBXError.badDatabase {
+      XCTAssertTrue(true)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -185,19 +377,42 @@ final class MDBXTests: XCTestCase {
       XCTFail(error.localizedDescription)
     }
   }
-  
-  func testCompareEqualValues() {
+
+  func testReadNotExistValueEx() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var key = Data.some
+      var valuesCount = 0
+      let _ = try _transaction!.getValueEx(for: &key, database: _table!, valuesCount: &valuesCount)
+      XCTFail("should throw error")
+    } catch MDBXError.notFound {
+      XCTAssertTrue(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+
+  func testCompareEqualKeys() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
       var key1 = Data.some
       var key2 = Data.some
-      let value = Data.some
-      
-      try writeData(key: key1, value: value)
-      try writeData(key: key2, value: value)
-      
+
       let result = _transaction!.compare(a: &key1, b: &key2, database: _table!)
       XCTAssert(result == 0)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCompareNotEqualKeys() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var key1 = Data.some
+      var key2 = Data.any
+            
+      let result = _transaction!.compare(a: &key1, b: &key2, database: _table!)
+      XCTAssert(result > 0)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -206,16 +421,26 @@ final class MDBXTests: XCTestCase {
   func testCompareNotEqualValues() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
-      var key1 = Data.some
-      var key2 = Data.some
-      let value1 = Data.someInt
-      let value2 = Data.veryLargeInt
+
+      var value1 = Data.someInt
+      var value2 = Data.veryLargeInt
       
-      try writeData(key: key1, value: value1)
-      try writeData(key: key2, value: value2)
+      let result = _transaction!.databaseCompare(a: &value1, b: &value2, database: _table!)
+      XCTAssert(result < 0)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCompareEqualValues() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+
+      var value1 = Data.someInt
+      var value2 = Data.someInt
       
-      let result = _transaction!.compare(a: &key1, b: &key2, database: _table!)
-      //XCTAssert(result < 0)
+      let result = _transaction!.databaseCompare(a: &value1, b: &value2, database: _table!)
+      XCTAssert(result == 0)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -240,6 +465,54 @@ final class MDBXTests: XCTestCase {
       )
       XCTAssert(oldData == Data.some)
       XCTAssert(value == Data.any)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReplaceNonExisingKey() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      var some = Data.some
+      var any = Data.any
+
+      let oldData = try _transaction!.replace(
+        new: &some,
+        forKey: &any,
+        database: _table!,
+        flags: [.upsert]
+      )
+      let value = try _transaction!.getValue(
+        for: &any,
+        database: _table!
+      )
+      XCTAssert(oldData == Data())
+      XCTAssert(value == Data.some)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReplaceForReadonly() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable_WriteSomeData()
+      try _transaction!.break()
+      try _transaction!.abort()
+      
+      _transaction = prepareTransaction()
+      try beginTransaction(transaction: _transaction!, readonly: true, flags: [.readOnly])
+      
+      var some = Data.some
+      var any = Data.any
+      
+      let _ = try _transaction!.replace(
+        new: &any,
+        forKey: &some,
+        database: _table!,
+        flags: [.upsert]
+      )
+    } catch MDBXError.EACCESS {
+      XCTAssert(true)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -272,6 +545,18 @@ final class MDBXTests: XCTestCase {
     }
   }
   
+  func testRemoveNonExistingValue() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      var some = Data.some
+      try _transaction!.delete(key: &some, database: _table!)
+    } catch MDBXError.notFound {
+      XCTAssert(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
   func testTableClear() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
@@ -297,6 +582,23 @@ final class MDBXTests: XCTestCase {
     }
   }
   
+  func testTableClearError() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try _transaction!.break()
+      try _transaction!.abort()
+      
+      let readTransaction = prepareTransaction()
+      try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+      
+      try readTransaction.drop(database: _table!, delete: false)
+    } catch MDBXError.EACCESS {
+      XCTAssert(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
   func testCommitEx() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
@@ -306,6 +608,23 @@ final class MDBXTests: XCTestCase {
       try writeData(key: key, value: value, commit: false)
       let latency = try _transaction!.commitEx()
       XCTAssert(latency.write < 10)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCommitExError() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      let value = Data.some
+      let key = Data.some
+      
+      try writeData(key: key, value: value, commit: false)
+      try _transaction!.abort()
+      let _ = try _transaction!.commitEx()
+      XCTFail("should throw error")
+    } catch MDBXError.badTransaction {
+      XCTAssert(true)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -334,30 +653,44 @@ final class MDBXTests: XCTestCase {
       var anyKey = Data.any
       
       try _cursor!.put(value: &value, key: &key, flags: [.upsert])
-      
       try _cursor!.put(value: &anyValue, key: &key, flags: [.upsert])
       
       var valuesCount = 0
       let _ = try _transaction?.getValueEx(for: &key, database: _table!, valuesCount: &valuesCount)
       XCTAssert(valuesCount == 2)
+      XCTAssert(try _cursor!.count() == 2)
 
       try _cursor!.put(value: &anyValue, key: &anyKey, flags: [.upsert])
       
       let data = try _cursor!.getValue(key: &anyKey, operation: [.first, .setKey])
+      XCTAssert(anyKey == Data.any)
       XCTAssert(data == anyValue)
       
-      let data1 = try _cursor!.getValue(key: &key, operation: [.next])
-      XCTAssert(data1 == anyValue)
-      
-      let data2 = try _cursor!.getValue(key: &key, operation: [.next])
-      XCTAssert(data2 == value)
-      
       var emptyKey = Data()
-      let firstValue = try _cursor!.getValue(key: &emptyKey, operation: [.first, .setLowerBound])
-      let currentData = try _cursor!.getValue(key: &emptyKey, operation: [.getCurrent])
+      let firstData = try _cursor!.getValue(key: &emptyKey, operation: [.first, .setLowerBound])
+      XCTAssertTrue(try _cursor!.onFirst())
+      XCTAssertFalse(try _cursor!.onLast())
+      XCTAssertTrue(emptyKey == Data.any)
+      XCTAssertTrue(firstData == anyValue)
+
+      let data1 = try _cursor!.getValue(key: &emptyKey, operation: [.next])
+      XCTAssertTrue(emptyKey == Data.some)
+      XCTAssertTrue(data1 == anyValue)
       
-      debugPrint("\(String(data: emptyKey, encoding: .utf8))")
-      
+      let prev = try _cursor!.getValue(key: &emptyKey, operation: [.prev])
+      XCTAssertTrue(emptyKey == Data.any)
+      XCTAssertTrue(prev == anyValue)
+
+      let next = try _cursor!.getValue(key: &emptyKey, operation: [.next])
+      XCTAssertTrue(emptyKey == Data.some)
+      XCTAssertTrue(next == anyValue)
+
+      let data2 = try _cursor!.getValue(key: &emptyKey, operation: [.next])
+      XCTAssertTrue(emptyKey == Data.some)
+      XCTAssertTrue(data2 == value)
+      XCTAssertTrue(try _cursor!.onLast())
+      XCTAssertFalse(try _cursor!.onFirst())
+
       do {
         _ = try _cursor!.getValue(key: &key, operation: [.next])
         XCTFail("should throw not found error")
@@ -366,6 +699,35 @@ final class MDBXTests: XCTestCase {
       } catch {
         throw error
       }
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorPutHandleError() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable(supportDuplicates: true)
+      
+      var value = Data.some
+      var key = Data.some
+      
+      var anyValue = Data.any      
+      try _cursor!.put(value: &value, key: &key, flags: [.noOverWrite])
+      try _cursor!.put(value: &anyValue, key: &key, flags: [.noOverWrite])
+    } catch MDBXError.keyExist {
+      XCTAssertTrue(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorCountError() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor()
+      _ = try _cursor!.count()
+      XCTFail("cursor should fail")
+    } catch MDBXError.EINVAL {
+      XCTAssert(true)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -388,6 +750,17 @@ final class MDBXTests: XCTestCase {
       } catch {
         XCTFail(error.localizedDescription)
       }
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testCursorDeleteNonExistingValue() {
+    do {
+      try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
+      try _cursor!.delete(flags: [.upsert])
+    } catch MDBXError.ENODATA {
+      XCTAssert(true)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -515,3 +888,23 @@ extension MDBXTests {
     }
   }
 }
+
+
+//bool testcase_try::run() {
+//  db_open();
+//  assert(!txn_guard);
+//
+//  MDBX_txn *txn = nullptr;
+//  MDBX_txn *txn2 = nullptr;
+//  int rc = mdbx_txn_begin(db_guard.get(), nullptr, MDBX_TXN_READWRITE, &txn);
+//  if (unlikely(rc != MDBX_SUCCESS))
+//    failure_perror("mdbx_txn_begin(MDBX_TXN_TRY)", rc);
+//  else {
+//    rc = mdbx_txn_begin(db_guard.get(), nullptr, MDBX_TXN_TRY, &txn2);
+//    if (unlikely(rc != MDBX_BUSY))
+//      failure_perror("mdbx_txn_begin(MDBX_TXN_TRY)", rc);
+//  }
+//
+//  txn_guard.reset(txn);
+//  return true;
+//}

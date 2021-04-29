@@ -85,6 +85,7 @@ extension MDBXTransaction {
     var data: MDBX_val = .init()
 
     let code = mdbx_get_equal_or_great(_txn, database._dbi, &mdbxKey, &data)
+    key = mdbxKey.data
     guard code != 0, let error = MDBXError(code: code) else {
         return data.data
     }
@@ -127,6 +128,7 @@ extension MDBXTransaction {
     var data: MDBX_val = .init()
 
     let code = mdbx_get_ex(_txn, database._dbi, &mdbxKey, &data, &valuesCount)
+    key = mdbxKey.data
     guard code != 0, let error = MDBXError(code: code) else {
         return data.data
     }

@@ -42,8 +42,8 @@ extension MDBXTransaction {
    * \retval MDBX_RESULT_FALSE   Given address is NOT on the dirty page.
    * \retval Otherwise the error code. */
 
-  func isDirty(data: Data) throws -> Bool {
-      let result = data.withUnsafeBytes { pointer in
+  func isDirty(data: inout Data) throws -> Bool {
+      let result = withUnsafeMutableBytes(of: &data) { pointer in
           return mdbx_is_dirty(_txn, pointer.baseAddress)
       }
       
