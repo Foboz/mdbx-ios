@@ -38,3 +38,11 @@ extension Data {
     return value
   }
 }
+
+extension Int {
+  static func asData(value: inout Int) -> Data {
+    return Swift.withUnsafeBytes(of: value.bigEndian) {
+      Data($0)
+    }
+  }
+}

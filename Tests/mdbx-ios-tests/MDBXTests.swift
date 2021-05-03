@@ -422,7 +422,7 @@ final class MDBXTests: XCTestCase {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
 
-      var value1 = Data.someInt
+      var value1 = Data.verySmallInt
       var value2 = Data.veryLargeInt
       
       let result = _transaction!.databaseCompare(a: &value1, b: &value2, database: _table!)
@@ -765,6 +765,190 @@ final class MDBXTests: XCTestCase {
       XCTFail(error.localizedDescription)
     }
   }
+    
+  func testTry() {
+    do {
+      dbOpen()
+      
+      let transaction = prepareTransaction()
+      try beginTransaction(transaction: transaction, readonly: false, flags: [.readWrite])
+      
+      let transaction2 = prepareTransaction()
+      try beginTransaction(transaction: transaction2, readonly: false, flags: [.try])
+      XCTFail("should fail with busy")
+    } catch MDBXError.busy {
+      XCTAssert(true)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  // MARK: Append
+  func testNonreverseUniqueAppend() {
+    do {
+      try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 100000)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReverseUniqueAppend() {
+    do {
+      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 100000)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testNonreverseNonuniqueApped() {
+    do {
+      try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 100000)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func testReverseNonuniqueApped() {
+    do {
+      try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 100000)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  private func batchWritingAndReading(reverse: Bool, duplicates: Bool, maxOps: Int, batchWrite: Int = 42) throws {
+    let caption = reverse ? "ahead" : "append"
+    debugPrint("================")
+    debugPrint("the \(caption) scenario selected. Duplicates enabled: \(duplicates)")
+    debugPrint("================")
+    
+    if duplicates {
+      try dbOpen_PrepareTransaction_MultiTable_Cursor()
+    } else {
+      try dbOpen_PrepareTransaction_Table_Cursor()
+    }
+    
+    try _transaction!.drop(database: _table!, delete: false)
+
+    var dbFlags = MDBXDatabaseFlags()
+    try databaseFlags(transaction: _transaction!, database: _table!, flags: &dbFlags)
+    
+    let putFlags = reverse
+      ? ((dbFlags.contains(.dupSort)) ? MDBXPutFlags.upsert : MDBXPutFlags.noOverWrite)
+      : ((dbFlags.contains(.dupSort)) ? MDBXPutFlags.appendDup : MDBXPutFlags.append)
+    
+    let keyGenerator = Generator<Int>(value: reverse ? Int.max : 0)
+    let valueGenerator = Generator<Int>(value: reverse ? Int.max : 0)
+    
+    var numberOfOperations = 0
+    var insertedCommits = 0
+    var insertedChecksum = 0
+    
+    while numberOfOperations < maxOps {
+      let turnKey = dbFlags.contains(.dupSort) == false
+      if turnKey {
+        if (reverse ? keyGenerator.decrement() == false : keyGenerator.increment() == false) {
+          break
+        }
+      } else {
+        if (reverse ? valueGenerator.decrement() == false : valueGenerator.increment() == false) {
+          break
+        }
+      }
+      
+      var key = keyGenerator.value
+      var data = valueGenerator.value
+
+      var geKey = Int.asData(value: &key)
+      var geData = Int.asData(value: &data)
+      
+      // put values
+      
+      var expectKeyMismatch = false
+      if putFlags.contains(.append) || putFlags.contains(.appendDup) {
+        
+        do {
+          let data = try _transaction!.getValueEqualOrGreater(for: &geKey, database: _table!)
+          if data == geData {
+            // exact match
+            expectKeyMismatch = true
+            XCTAssertTrue(numberOfOperations > 0)
+          } else {
+            switch putFlags {
+            case .append, .appendDup:
+              XCTAssert(dbFlags.contains(.dupSort))
+              expectKeyMismatch = true
+            default:
+              break
+            }
+          }
+        } catch MDBXError.notFound {
+          expectKeyMismatch = false
+        } catch {
+          XCTFail("\(error.localizedDescription)")
+        }
+      }
+      
+      do {
+        try _cursor!.put(value: &geData, key: &geKey, flags: putFlags)
+      } catch MDBXError.keyMismatch {
+      } catch MDBXError.keyExist {
+      } catch {
+        XCTFail(error.localizedDescription)
+      }
+
+      if (!expectKeyMismatch) {
+        insertedChecksum = insertedChecksum ^ geKey.toInt() ^ geData.toInt() ^ insertedCommits
+        insertedCommits += 1
+      }
+
+      numberOfOperations += 1
+      
+      if numberOfOperations % batchWrite == 0 {
+        do {
+          try _transaction!.commit()
+          try beginTransaction(transaction: _transaction!)
+          try _cursor!.renew(transaction: _transaction!)
+        } catch {
+          XCTFail(error.localizedDescription)
+        }
+      }
+    }
+    
+    do {
+      try _transaction!.commit()
+      try beginTransaction(transaction: _transaction!)
+      try _cursor!.renew(transaction: _transaction!)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+    
+    var key = Data()
+    
+    var readCount = 0
+    var readChecksum = 0
+    do {
+      let value = try _cursor!.getValue(key: &key, operation: reverse ? [.last] : [.first])
+      readChecksum = key.toInt() ^ value.toInt() ^ readCount
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+    
+    var end = false
+    while end == false {
+      readCount += 1
+      
+      do {
+        let value = try _cursor!.getValue(key: &key, operation: reverse ? [.prev] : [.next])
+        readChecksum = readChecksum ^ key.toInt() ^ value.toInt() ^ readCount
+      } catch {
+        end = true
+      }
+    }
+    
+    XCTAssert(readChecksum == insertedChecksum)
+
+  }
 }
 
 extension MDBXTests {
@@ -889,22 +1073,77 @@ extension MDBXTests {
   }
 }
 
+extension Data {
+  public init(hex: String) {
+    self.init(Array<UInt8>(hex: hex))
+  }
 
-//bool testcase_try::run() {
-//  db_open();
-//  assert(!txn_guard);
-//
-//  MDBX_txn *txn = nullptr;
-//  MDBX_txn *txn2 = nullptr;
-//  int rc = mdbx_txn_begin(db_guard.get(), nullptr, MDBX_TXN_READWRITE, &txn);
-//  if (unlikely(rc != MDBX_SUCCESS))
-//    failure_perror("mdbx_txn_begin(MDBX_TXN_TRY)", rc);
-//  else {
-//    rc = mdbx_txn_begin(db_guard.get(), nullptr, MDBX_TXN_TRY, &txn2);
-//    if (unlikely(rc != MDBX_BUSY))
-//      failure_perror("mdbx_txn_begin(MDBX_TXN_TRY)", rc);
-//  }
-//
-//  txn_guard.reset(txn);
-//  return true;
-//}
+  public var bytes: Array<UInt8> {
+    Array(self)
+  }
+
+  public func toHexString() -> String {
+    self.bytes.toHexString()
+  }
+}
+
+extension Array where Element == UInt8 {
+  public func toHexString() -> String {
+    `lazy`.reduce(into: "") {
+      var s = String($1, radix: 16)
+      if s.count == 1 {
+        s = "0" + s
+      }
+      $0 += s
+    }
+  }
+  
+  public init(hex: String) {
+      self.init(reserveCapacity: hex.unicodeScalars.lazy.underestimatedCount)
+      var buffer: UInt8?
+      var skip = hex.hasPrefix("0x") ? 2 : 0
+      for char in hex.unicodeScalars.lazy {
+        guard skip == 0 else {
+          skip -= 1
+          continue
+        }
+        guard char.value >= 48 && char.value <= 102 else {
+          removeAll()
+          return
+        }
+        let v: UInt8
+        let c: UInt8 = UInt8(char.value)
+        switch c {
+          case let c where c <= 57:
+            v = c - 48
+          case let c where c >= 65 && c <= 70:
+            v = c - 55
+          case let c where c >= 97:
+            v = c - 87
+          default:
+            removeAll()
+            return
+        }
+        if let b = buffer {
+          append(b << 4 | v)
+          buffer = nil
+        } else {
+          buffer = v
+        }
+      }
+      if let b = buffer {
+        append(b)
+      }
+    }
+}
+
+extension Array {
+  init(reserveCapacity: Int) {
+    self = Array<Element>()
+    self.reserveCapacity(reserveCapacity)
+  }
+
+  var slice: ArraySlice<Element> {
+    self[self.startIndex ..< self.endIndex]
+  }
+}
