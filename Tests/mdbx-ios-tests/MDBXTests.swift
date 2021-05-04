@@ -36,6 +36,9 @@ final class MDBXTests: XCTestCase {
   
   override func tearDown() {
     super.tearDown()
+    try? _transaction!.drop(database: _table!, delete: false)
+    try? _transaction!.commit()
+    
     try? _transaction?.abort()
     _cursor?.close()
     _cursor = nil
@@ -44,56 +47,12 @@ final class MDBXTests: XCTestCase {
     _table = nil
     _environment?.close()
     _environment = nil
-  }
-  
-  func dbPrepare() -> MDBXEnvironment? {
-    let environment = MDBXEnvironment()
-    do {
-      try environment.create()
-      var mutSelf = self
-      try environment.unsafeSetContext(&mutSelf)
-      try environment.setMaxReader(42)
-      try environment.setMaxDatabases(42)
-      
-      let geometry = MDBXGeometry(sizeLower: -1,
-                                  sizeNow: 1024 * 32,
-                                  sizeUpper: -1,
-                                  growthStep: -1,
-                                  shrinkThreshold: -1,
-                                  pageSize: -1)
-      try environment.setHandleSlowReaders { (env, txn, pid, tid, laggard, gap, space, retry) -> Int32 in
-        debugPrint(env ?? "")
-        debugPrint(txn ?? "")
-        debugPrint(pid)
-        debugPrint(tid ?? "")
-        debugPrint(laggard)
-        debugPrint(gap)
-        debugPrint(space)
-        debugPrint(retry)
-        //     rc = mdbx_env_set_hsr(env, testcase::hsr_callback);
-        //     if (unlikely(rc != MDBX_SUCCESS))
-        //       failure_perror("mdbx_env_set_hsr()", rc);
-        //
-        //     rc = mdbx_env_set_geometry(
-        //         env, config.params.size_lower, config.params.size_now,
-        //         config.params.size_upper, config.params.growth_step,
-        //         config.params.shrink_threshold, config.params.pagesize);
-        //     if (unlikely(rc != MDBX_SUCCESS))
-        //       failure_perror("mdbx_env_set_mapsize()", rc);
-        //
-        //     log_trace("<< db_prepare");s
-        return -1
-      }
-      try environment.setGeometry(geometry)
-    } catch {
-      XCTFail(error.localizedDescription)
-    }
-
-    return environment
-  }
     
+    dbDelete()
+  }
+      
   func testDBOpen() {
-    dbOpen()
+    dbOpen(environment: _environment!)
     addTeardownBlock {
       self.dbClose()
     }
@@ -101,7 +60,7 @@ final class MDBXTests: XCTestCase {
       
   func testBeginTransaction() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
     } catch {
@@ -111,7 +70,7 @@ final class MDBXTests: XCTestCase {
   
   func testTransactionId() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       XCTAssert(transaction.id == 0) // inactive
       try beginTransaction(transaction: transaction)
@@ -123,7 +82,7 @@ final class MDBXTests: XCTestCase {
   
   func testTransactionFlags() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction, readonly: true, flags: [.readOnly])
       XCTAssertTrue(transaction.flags.contains(.readOnly))
@@ -152,7 +111,7 @@ final class MDBXTests: XCTestCase {
   
   func testBreakableCommit() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
       try transaction.commit()
@@ -163,7 +122,7 @@ final class MDBXTests: XCTestCase {
   
   func testCursorOpen() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
       let database = try prepareTable(transaction: transaction, create: true)
@@ -179,7 +138,7 @@ final class MDBXTests: XCTestCase {
   
   func testCursorClose() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
       let database = try prepareTable(transaction: transaction, create: true)
@@ -768,7 +727,7 @@ final class MDBXTests: XCTestCase {
     
   func testTry() {
     do {
-      dbOpen()
+      dbOpen(environment: _environment!)
       
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction, readonly: false, flags: [.readWrite])
@@ -786,7 +745,11 @@ final class MDBXTests: XCTestCase {
   // MARK: Append
   func testNonreverseUniqueAppend() {
     do {
+      let date = Date()
       try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 100000)
+      debugPrint("================")
+      print("time: \(abs(date.timeIntervalSinceNow))")
+      debugPrint("================")
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -794,13 +757,13 @@ final class MDBXTests: XCTestCase {
   
   func testReverseUniqueAppend() {
     do {
-      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 100000)
+      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 500000)
     } catch {
       XCTFail(error.localizedDescription)
     }
   }
   
-  func testNonreverseNonuniqueApped() {
+  func testNonreverseNonuniqueAppend() {
     do {
       try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 100000)
     } catch {
@@ -808,7 +771,7 @@ final class MDBXTests: XCTestCase {
     }
   }
   
-  func testReverseNonuniqueApped() {
+  func testReverseNonuniqueAppend() {
     do {
       try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 100000)
     } catch {
@@ -845,7 +808,7 @@ final class MDBXTests: XCTestCase {
     var insertedChecksum = 0
     
     while numberOfOperations < maxOps {
-      let turnKey = dbFlags.contains(.dupSort) == false
+      let turnKey = dbFlags.contains(.dupSort) == false || Bool.random()
       if turnKey {
         if (reverse ? keyGenerator.decrement() == false : keyGenerator.increment() == false) {
           break
@@ -875,9 +838,11 @@ final class MDBXTests: XCTestCase {
             XCTAssertTrue(numberOfOperations > 0)
           } else {
             switch putFlags {
-            case .append, .appendDup:
-              XCTAssert(dbFlags.contains(.dupSort))
+            case .append:
               expectKeyMismatch = true
+            case .appendDup:
+              XCTAssert(dbFlags.contains(.dupSort))
+              expectKeyMismatch = false
             default:
               break
             }
@@ -947,69 +912,22 @@ final class MDBXTests: XCTestCase {
     }
     
     XCTAssert(readChecksum == insertedChecksum)
-
   }
 }
 
 extension MDBXTests {
-  func dbOpen() {
-    do {
-      let path = FileManager.default.temporaryDirectory.appendingPathComponent("pathname_db").path
-      debugPrint("================")
-      debugPrint("DB PATH: \(path)")
-      debugPrint("================")
-      try _environment?.open(path: path, flags: .envDefaults, mode: .iOSPermission)
-      addTeardownBlock {
-        try? FileManager.default.removeItem(atPath: path)
-      }
-    } catch {
-      XCTFail(error.localizedDescription)
-    }
-  }
-
   func prepareTransaction() -> MDBXTransaction {
     XCTAssertNotNil(_environment)
     
     return MDBXTransaction(_environment!)
   }
   
-  func prepareTable(transaction: MDBXTransaction, create: Bool) throws -> MDBXDatabase {
-    let db = MDBXDatabase()
-    try db.open(transaction: transaction, name: "MAINDB", flags: create ? .create : .defaults)
-    return db
-  }
-  
-  func prepareMultiTable(transaction: MDBXTransaction, create: Bool) throws -> MDBXDatabase {
-    let db = MDBXDatabase()
-    try db.open(transaction: transaction, name: "MULTIDB", flags: create ? [.create, .dupSort] : [.defaults, .dupSort])
-    return db
-  }
-  
-  func prepareCursor(transaction: MDBXTransaction, database: MDBXDatabase) throws -> MDBXCursor {
-    let cursor = MDBXCursor()
-    try cursor.open(transaction: transaction, database: database)
-    
-    return cursor
-  }
-  
-  func beginTransaction(transaction: MDBXTransaction, readonly: Bool = false, flags: MDBXTransactionFlags = []) throws {
-    if !readonly {
-      XCTAssert(!flags.contains(.readOnly))
-    }
-    
-    try transaction.begin(flags: flags)
-  }
-    
   func dbClose() {
     self._environment?.close()
   }
   
-  func drop(transaction: MDBXTransaction, database: MDBXDatabase, delete: Bool) throws {
-    try transaction.drop(database: database, delete: delete)
-  }
-  
   func dbOpen_PrepareTransaction() {
-    dbOpen()
+    dbOpen(environment: _environment!)
     _transaction = prepareTransaction()
   }
   
@@ -1062,88 +980,5 @@ extension MDBXTests {
   func dbOpen_PrepareTransaction_Table_Cursor_CloseCursor() throws {
     try dbOpen_PrepareTransaction_Table_Cursor()
     _cursor!.close()
-  }
-  
-  func transactionEnd(abort: Bool, transaction: MDBXTransaction) throws {
-    if abort {
-      try transaction.abort()
-    } else {
-      try transaction.commit()
-    }
-  }
-}
-
-extension Data {
-  public init(hex: String) {
-    self.init(Array<UInt8>(hex: hex))
-  }
-
-  public var bytes: Array<UInt8> {
-    Array(self)
-  }
-
-  public func toHexString() -> String {
-    self.bytes.toHexString()
-  }
-}
-
-extension Array where Element == UInt8 {
-  public func toHexString() -> String {
-    `lazy`.reduce(into: "") {
-      var s = String($1, radix: 16)
-      if s.count == 1 {
-        s = "0" + s
-      }
-      $0 += s
-    }
-  }
-  
-  public init(hex: String) {
-      self.init(reserveCapacity: hex.unicodeScalars.lazy.underestimatedCount)
-      var buffer: UInt8?
-      var skip = hex.hasPrefix("0x") ? 2 : 0
-      for char in hex.unicodeScalars.lazy {
-        guard skip == 0 else {
-          skip -= 1
-          continue
-        }
-        guard char.value >= 48 && char.value <= 102 else {
-          removeAll()
-          return
-        }
-        let v: UInt8
-        let c: UInt8 = UInt8(char.value)
-        switch c {
-          case let c where c <= 57:
-            v = c - 48
-          case let c where c >= 65 && c <= 70:
-            v = c - 55
-          case let c where c >= 97:
-            v = c - 87
-          default:
-            removeAll()
-            return
-        }
-        if let b = buffer {
-          append(b << 4 | v)
-          buffer = nil
-        } else {
-          buffer = v
-        }
-      }
-      if let b = buffer {
-        append(b)
-      }
-    }
-}
-
-extension Array {
-  init(reserveCapacity: Int) {
-    self = Array<Element>()
-    self.reserveCapacity(reserveCapacity)
-  }
-
-  var slice: ArraySlice<Element> {
-    self[self.startIndex ..< self.endIndex]
-  }
+  }  
 }
