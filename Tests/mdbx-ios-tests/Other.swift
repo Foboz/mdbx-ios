@@ -85,8 +85,8 @@ final class OtherTests: XCTestCase {
 
     let expectation = XCTestExpectation(description: "Read/write some in background thread")
     
-    let keyGenerator = Generator<Int>(value: 0)
-    let valueGenerator = Generator<Int>(value: Int.max)
+    let keyGenerator = Generator<Int>(value: -100)
+    let valueGenerator = Generator<Int>(value: 212)
 
     let write = DispatchQueue(label: "writeQueue")
     var writeChecksum = 0
@@ -107,11 +107,7 @@ final class OtherTests: XCTestCase {
           if db == nil {
             db = try prepareTable(transaction: transaction, create: true)
           }
-          
-          if cursor == nil {
-            cursor = try prepareCursor(transaction: transaction, database: db!)
-          }
-          
+                    
           var dataInt = valueGenerator.value
           var keyInt = keyGenerator.value
           
@@ -125,8 +121,8 @@ final class OtherTests: XCTestCase {
             try beginTransaction(transaction: transaction)
           }
           
-          _ = keyGenerator.increment()
-          _ = valueGenerator.decrement()
+          _ = keyGenerator.decrement()
+          _ = valueGenerator.increment()
           
           writeChecksum = writeChecksum ^ keyInt ^ dataInt ^ numberOfOps
           numberOfOps += 1
@@ -150,11 +146,12 @@ final class OtherTests: XCTestCase {
     read.async {
       var attempts = 0
       while attempts < 1000 {
+        Thread.sleep(forTimeInterval: 0.2)
+
         guard let db = db else {
           continue
         }
         
-        Thread.sleep(forTimeInterval: 0.2)
         let readTransaction = MDBXTransaction(env)
         do {
           let date = Date()
