@@ -36,16 +36,17 @@ final class MDBXTests: XCTestCase {
   
   override func tearDown() {
     super.tearDown()
-    try? _transaction!.drop(database: _table!, delete: false)
-    try? _transaction!.commit()
-    
-    try? _transaction?.abort()
+
     _cursor?.close()
     _cursor = nil
+    
+    try? _transaction?.break()
+    try? _transaction?.abort()
     _transaction = nil
+    
     _table?.close()
     _table = nil
-    _environment?.close()
+    _environment?.close(true)
     _environment = nil
     
     dbDelete()
@@ -63,6 +64,7 @@ final class MDBXTests: XCTestCase {
       dbOpen(environment: _environment!)
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction)
+      _transaction = transaction
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -75,6 +77,7 @@ final class MDBXTests: XCTestCase {
       XCTAssert(transaction.id == 0) // inactive
       try beginTransaction(transaction: transaction)
       XCTAssert(transaction.id > 0) // active
+      _transaction = transaction
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -86,6 +89,7 @@ final class MDBXTests: XCTestCase {
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction, readonly: true, flags: [.readOnly])
       XCTAssertTrue(transaction.flags.contains(.readOnly))
+      _transaction = transaction
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -127,7 +131,7 @@ final class MDBXTests: XCTestCase {
       try beginTransaction(transaction: transaction)
       let database = try prepareTable(transaction: transaction, create: true)
       let cursor = try prepareCursor(transaction: transaction, database: database)
-      
+      _transaction = transaction
       addTeardownBlock {
         cursor.close()
       }
@@ -144,7 +148,8 @@ final class MDBXTests: XCTestCase {
       let database = try prepareTable(transaction: transaction, create: true)
       let cursor = try prepareCursor(transaction: transaction, database: database)
       
-      cursor.close()
+      _transaction = transaction
+      _cursor = cursor
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -280,6 +285,10 @@ final class MDBXTests: XCTestCase {
       }
       try readTransaction.renew()
       _ = try readTransaction.getValue(for: &key, database: _table!)
+      
+      addTeardownBlock {
+        try? readTransaction.abort()
+      }
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -299,6 +308,9 @@ final class MDBXTests: XCTestCase {
       var key = Data.any
       let _ = try readTransaction.getValue(for: &key, database: _table!)
       XCTFail("should fail with notfound")
+      addTeardownBlock {
+        try? readTransaction.abort()
+      }
     } catch MDBXError.notFound {
       XCTAssertTrue(true)
     } catch {
@@ -317,6 +329,9 @@ final class MDBXTests: XCTestCase {
       var key = Data.any
       let _ = try readTransaction.getValue(for: &key, database: _table!)
       XCTFail("should fail with notfound")
+      addTeardownBlock {
+        try? readTransaction.abort()
+      }
     } catch MDBXError.badDatabase {
       XCTAssertTrue(true)
     } catch {
@@ -551,6 +566,9 @@ final class MDBXTests: XCTestCase {
       try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
       
       try readTransaction.drop(database: _table!, delete: false)
+      addTeardownBlock {
+        try? readTransaction.abort()
+      }
     } catch MDBXError.EACCESS {
       XCTAssert(true)
     } catch {
@@ -731,8 +749,14 @@ final class MDBXTests: XCTestCase {
       
       let transaction = prepareTransaction()
       try beginTransaction(transaction: transaction, readonly: false, flags: [.readWrite])
-      
+      addTeardownBlock {
+        try? transaction.abort()
+      }
+
       let transaction2 = prepareTransaction()
+      addTeardownBlock {
+        try? transaction2.abort()
+      }
       try beginTransaction(transaction: transaction2, readonly: false, flags: [.try])
       XCTFail("should fail with busy")
     } catch MDBXError.busy {
@@ -746,7 +770,7 @@ final class MDBXTests: XCTestCase {
   func testNonreverseUniqueAppend() {
     do {
       let date = Date()
-      try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 100000)
+      try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 500000)
       debugPrint("================")
       print("time: \(abs(date.timeIntervalSinceNow))")
       debugPrint("================")
@@ -765,7 +789,7 @@ final class MDBXTests: XCTestCase {
   
   func testNonreverseNonuniqueAppend() {
     do {
-      try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 100000)
+      try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 500000)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -773,7 +797,7 @@ final class MDBXTests: XCTestCase {
   
   func testReverseNonuniqueAppend() {
     do {
-      try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 100000)
+      try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 500000)
     } catch {
       XCTFail(error.localizedDescription)
     }

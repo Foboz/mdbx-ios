@@ -74,35 +74,70 @@ final class OtherTests: XCTestCase {
   }
   
   func testAsyncReadWrite() {
+    dbDelete()
+
+    let numberOfCommits = 200000
+
     let env = dbPrepare()!
     dbOpen(environment: env)
     var db: MDBXDatabase?
+    var cursor: MDBXCursor?
 
     let expectation = XCTestExpectation(description: "Read/write some in background thread")
     
+    let keyGenerator = Generator<Int>(value: 0)
+    let valueGenerator = Generator<Int>(value: Int.max)
 
     let write = DispatchQueue(label: "writeQueue")
+    var writeChecksum = 0
+    
     write.async {
-      Thread.sleep(forTimeInterval: 0.2)
+      Thread.sleep(forTimeInterval: 0.01)
+      var numberOfOps = 0
+      let transaction = MDBXTransaction(env)
       do {
-        let transaction = MDBXTransaction(env)
         try beginTransaction(transaction: transaction)
-        
-        db = try prepareTable(transaction: transaction, create: true)
+      } catch {
+        XCTFail(error.localizedDescription)
+        abort()
+      }
 
-        var data = Data.some
-        var key = Data.some
-        
-        try transaction.put(value: &data, forKey: &key, database: db!, flags: [.upsert])
+      while numberOfOps < numberOfCommits {
+        do {
+          if db == nil {
+            db = try prepareTable(transaction: transaction, create: true)
+          }
+          
+          if cursor == nil {
+            cursor = try prepareCursor(transaction: transaction, database: db!)
+          }
+          
+          var dataInt = valueGenerator.value
+          var keyInt = keyGenerator.value
+          
+          var data = Int.asData(value: &dataInt)
+          var key = Int.asData(value: &keyInt)
+          
+          try transaction.put(value: &data, forKey: &key, database: db!, flags: [.upsert])
+          
+          if numberOfOps % 42 == 0 {
+            try transaction.commit()
+            try beginTransaction(transaction: transaction)
+          }
+          
+          _ = keyGenerator.increment()
+          _ = valueGenerator.decrement()
+          
+          writeChecksum = writeChecksum ^ keyInt ^ dataInt ^ numberOfOps
+          numberOfOps += 1
+        } catch {
+          XCTFail(error.localizedDescription)
+          break
+        }
+      }
+      
+      do {
         try transaction.commit()
-
-        Thread.sleep(forTimeInterval: 0.2)
-        
-        var anyData = Data.any
-        var anyKey = Data.any
-        try beginTransaction(transaction: transaction)
-        try transaction.put(value: &anyData, forKey: &anyKey, database: db!, flags: [.upsert])
-        try transaction.commit()        
       } catch {
         XCTFail(error.localizedDescription)
       }
@@ -110,44 +145,62 @@ final class OtherTests: XCTestCase {
     
     
     let read = DispatchQueue(label: "readQueue")
+    var readChecksum = 0
+        
     read.async {
-      let readTransaction = MDBXTransaction(env)
-      
       var attempts = 0
-      while attempts < 100 {
+      while attempts < 1000 {
         guard let db = db else {
           continue
         }
         
-        Thread.sleep(forTimeInterval: 0.05)
+        Thread.sleep(forTimeInterval: 0.2)
+        let readTransaction = MDBXTransaction(env)
         do {
-          if attempts == 0 {
-            try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+          let date = Date()
+          try beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
+
+          if cursor == nil {
+            cursor = try prepareCursor(transaction: readTransaction, database: db)
           } else {
-            try readTransaction.renew()
+            try cursor!.renew(transaction: readTransaction)
           }
-
-          var key = Data.some
-          let some = try readTransaction.getValue(for: &key, database: db)
-          XCTAssert(some == Data.some)
           
-          var anyKey = Data.any
-          let any = try readTransaction.getValue(for: &anyKey, database: db)
-          XCTAssert(any == Data.any)
+          var key = Data()
+          var readCount = 0
+          let value = try cursor!.getValue(key: &key, operation: [.first, .setLowerBound])
+          readChecksum = key.toInt() ^ value.toInt() ^ readCount
 
-          try? readTransaction.abort()
-          expectation.fulfill()
-          break
+          var end = false
+          while end == false {
+            readCount += 1
+            
+            do {
+              let value = try cursor!.getValue(key: &key, operation: [.next])
+              readChecksum = readChecksum ^ key.toInt() ^ value.toInt() ^ readCount
+            } catch {
+              end = true
+            }
+          }
+          if readChecksum == writeChecksum && readCount == numberOfCommits {
+            debugPrint("=============")
+            debugPrint("testAsyncReadWrite 187: successful read on \(attempts) attempt. Total time: \(abs(date.timeIntervalSinceNow)) secs")
+            debugPrint("=============")
+            expectation.fulfill()
+            break
+          } else {
+            attempts += 1
+          }
         } catch {
           debugPrint(error.localizedDescription)
-          try? readTransaction.reset()
-          
           attempts += 1
         }
+        try? readTransaction.break()
+        try? readTransaction.abort()
       }
     }
     
-    wait(for: [expectation], timeout: 2)
+    wait(for: [expectation], timeout: 10)
     env.close()
   }
   
