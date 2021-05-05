@@ -58,6 +58,17 @@ final class MDBXTests: XCTestCase {
       self.dbClose()
     }
   }
+  
+  func testPath() {
+    do {
+      dbOpen(environment: _environment!)
+      let path = try _environment!.getPath()
+      let url = URL(string: path)!
+      XCTAssert(url.lastPathComponent == Static.dbName)
+    } catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
       
   func testBeginTransaction() {
     do {

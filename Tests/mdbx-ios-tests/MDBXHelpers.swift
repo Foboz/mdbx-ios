@@ -10,6 +10,10 @@ import XCTest
 
 @testable import mdbx_ios
 
+enum Static {
+  static let dbName = "pathname_db"
+}
+
 func prepareTable(transaction: MDBXTransaction, create: Bool) throws -> MDBXDatabase {
   let db = MDBXDatabase()
   try db.open(transaction: transaction, name: "MAINDB", flags: create ? .create : .defaults)
@@ -47,7 +51,7 @@ func prepareCursor(transaction: MDBXTransaction, database: MDBXDatabase) throws 
 
 func dbOpen(environment: MDBXEnvironment) {
   do {
-    let path = FileManager.default.temporaryDirectory.appendingPathComponent("pathname_db").path
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent(Static.dbName).path
     debugPrint("================")
     debugPrint("DB PATH: \(path)")
     debugPrint("================")
@@ -58,7 +62,7 @@ func dbOpen(environment: MDBXEnvironment) {
 }
 
 func dbDelete() {
-  let path = FileManager.default.temporaryDirectory.appendingPathComponent("pathname_db").path
+  let path = FileManager.default.temporaryDirectory.appendingPathComponent(Static.dbName).path
   try? FileManager.default.removeItem(atPath: path)
 }
 
