@@ -11,23 +11,15 @@ import libmdbx_ios
 internal typealias MDBX_dbi = UInt32
 
 final class MDBXDatabase {
-  internal enum MDBXDatabaseState {
-    case unknown
-    case opened(MDBXEnvironment)
-    
-    var isUnknown: Bool {
-      switch self {
-      case .unknown: return true
-      default: return false
-      }
-    }
-  }
-  
-  internal var _dbi: MDBX_dbi!
-  internal var _state: MDBXDatabaseState = .unknown
+  internal var _dbi: MDBX_dbi = 0
+  internal var _env: MDBXEnvironment?
   
   init(dbi: MDBX_dbi) {
     _dbi = dbi
+  }
+  
+  init() {
+    
   }
   
   deinit {
@@ -136,7 +128,6 @@ final class MDBXDatabase {
     name: String?,
     flags: MDBXDatabaseFlags
   ) throws {
-    guard self._state.isUnknown else { throw MDBXError.alreadyCreated }
     let code = withUnsafeMutablePointer(to: &_dbi) { pointer in
       return mdbx_dbi_open(
         transaction._txn,
@@ -146,7 +137,7 @@ final class MDBXDatabase {
       )
     }
     guard code != 0, let error = MDBXError(code: code) else {
-      self._state = .opened(transaction.environment)
+      _env = transaction.environment
       return
     }
     throw error
@@ -176,11 +167,10 @@ final class MDBXDatabase {
    * \returns A non-zero error value on failure and 0 on success. */
 
   func close() {
-    guard case .opened(let env) = self._state else {
+    guard let env = _env else {
       return
     }
-    
     mdbx_dbi_close(env._env, _dbi)
-    self._state = .unknown
+    _env = nil
   }
 }

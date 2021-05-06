@@ -104,23 +104,16 @@ extension MDBXCursor {
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
 
   func getValue(key: inout Data, operation: MDBXCursorOperations) throws -> Data {
-    var mdbxKey = key.mdbxVal
+    var mdbxKey = MDBX_val(data: &key)
     var mdbxData = MDBX_val()
     
-    try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer in
-      try withUnsafeMutablePointer(to: &mdbxData) { dataPointer in
-        let code = mdbx_cursor_get(_cursor, keyPointer, dataPointer, operation.MDBX_cursor_op)
-        
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
-        }
-
-        throw error
-      }
+    let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
+    key = mdbxKey.data
+    guard code != 0, let error = MDBXError(code: code) else {
+      return mdbxData.data
     }
     
-    key = mdbxKey.data
-    return mdbxData.data
+    throw error
   }
   
   /** \brief Store by cursor.
@@ -204,20 +197,16 @@ extension MDBXCursor {
    *                            transaction.
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
-  func put(value: Data, key: Data, flags: MDBXPutFlags) throws {
-    var mdbxKey = key.mdbxVal
-    var mdbxData = value.mdbxVal
+  func put(value: inout Data, key: inout Data, flags: MDBXPutFlags) throws {
+    var mdbxKey = MDBX_val(data: &key)
+    var mdbxData = MDBX_val(data: &value)
     
-    try withUnsafeMutablePointer(to: &mdbxKey) { keyPointer in
-      try withUnsafeMutablePointer(to: &mdbxData) { dataPointer in
-        let code = mdbx_cursor_put(_cursor, keyPointer, dataPointer, flags.MDBX_put_flags_t)
-        
-        guard code != 0, let error = MDBXError(code: code) else {
-          return
-        }
-
-        throw error
-      }
+    let code = mdbx_cursor_put(_cursor, &mdbxKey, &mdbxData, flags.MDBX_put_flags_t)
+    
+    guard code != 0, let error = MDBXError(code: code) else {
+      return
     }
+
+    throw error
   }
 }

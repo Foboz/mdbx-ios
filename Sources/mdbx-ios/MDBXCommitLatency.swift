@@ -8,6 +8,10 @@
 import Foundation
 import libmdbx_ios
 
+/** \brief Latency of commit stages in 1/65536 of seconds units.
+ * \warning This structure may be changed in future releases.
+ * \see mdbx_txn_commit_ex() */
+
 struct MDBXCommitLatency {
   let preparation: UInt32
   let gc: UInt32
