@@ -20,7 +20,7 @@ let package = Package(
       dependencies: ["libmdbx_ios"]),
     .binaryTarget(
       name: "libmdbx_ios",
-      url: "https://github.com/Foboz/mdbx-ios/releases/download/1.0.0/libmdbx_ios.xcframework.zip",
-      checksum: "46ce0391693cff2c6c8ba5399df9bc6414770bece8fdad6351635cae228ee5e8")
+      url: "https://github.com/Foboz/mdbx-ios/releases/download/1.0.1/libmdbx_ios.xcframework.zip",
+      checksum: "9500b0db7b5090d6b00ab28d72e5a9ba5cdce58a399061e3a30df01249253406")
   ]
 )
