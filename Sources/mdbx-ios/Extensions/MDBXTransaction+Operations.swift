@@ -8,7 +8,7 @@
 import Foundation
 import libmdbx_ios
 
-extension MDBXTransaction {
+public extension MDBXTransaction {
   /** \brief Get items from a database.
    * \ingroup c_crud
    *

@@ -23,11 +23,5 @@ extension MDBX_val {
     }
     
     return Data.init(bytes: iov_base, count: iov_len)
-    
-//    return Data(
-//      bytesNoCopy: iov_base,
-//      count: iov_len,
-//      deallocator: .none
-//    )
   }
 }

@@ -7,11 +7,20 @@
 
 import Foundation
 
-struct MDBXGeometry {
-  let sizeLower: Int
-  let sizeNow: Int
-  let sizeUpper: Int
-  let growthStep: Int
-  let shrinkThreshold: Int
-  let pageSize: Int
+public struct MDBXGeometry {
+  public let sizeLower: Int
+  public let sizeNow: Int
+  public let sizeUpper: Int
+  public let growthStep: Int
+  public let shrinkThreshold: Int
+  public let pageSize: Int
+  
+  init(sizeLower: Int, sizeNow: Int, sizeUpper: Int, growthStep: Int, shrinkThreshold: Int, pageSize: Int) {
+    self.sizeLower = sizeLower
+    self.sizeNow = sizeNow
+    self.sizeUpper = sizeUpper
+    self.growthStep = growthStep
+    self.shrinkThreshold = shrinkThreshold
+    self.pageSize = pageSize
+  }
 }

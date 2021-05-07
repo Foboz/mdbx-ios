@@ -11,8 +11,8 @@ import Foundation
  * \ingroup c_statinfo
  * \see mdbx_env_info_ex() */
 
-struct MDBXEnvironmentInfo {
-  struct GeoMeta {
+public struct MDBXEnvironmentInfo {
+  public struct GeoMeta {
     let lower: UInt64 /**< Lower limit for datafile size */
     let upper: UInt64 /**< Upper limit for datafile size */
     let current: UInt64 /**< Current datafile size */
@@ -20,19 +20,19 @@ struct MDBXEnvironmentInfo {
     let grow: UInt64 /**< Growth step for datafile */
   }
   
-  struct Meta {
+  public struct Meta {
     let x: UInt64
     let y: UInt64
   }
   
-  struct BootMeta {
+  public struct BootMeta {
     let current: Meta
     let meta0: Meta
     let meta1: Meta
     let meta2: Meta
   }
   
-  let geo: GeoMeta
+  public let geo: GeoMeta
   
   //   As such it can be used to identify the local machine's current boot. MDBX
   //   uses such when open the database to determine whether rollback required to
@@ -40,35 +40,35 @@ struct MDBXEnvironmentInfo {
   //   value within a database then the system was rebooted and all changes since
   //   last steady sync must be reverted for data integrity. Zeros mean that no
   //   relevant information is available from the system. */
-  let bootId: BootMeta
+  public let bootId: BootMeta
   
-  let mapSize: UInt64 /**< Size of the data memory map */
-  let lastPageNumber: UInt64 /**< Number of the last used page */
-  let recentTxnId: UInt64 /**< ID of the last committed transaction */
-  let latterReaderTxnId: UInt64 /**< ID of the last reader transaction */
-  let selfLatterReaderTxnId: UInt64 /**< ID of the last reader transaction of caller process */
-  let meta0_txnId, meta0_sign: UInt64
-  let meta1_txnId, meta1_sign: UInt64
-  let meta2_txnId, meta2_sign: UInt64
+  public let mapSize: UInt64 /**< Size of the data memory map */
+  public let lastPageNumber: UInt64 /**< Number of the last used page */
+  public let recentTxnId: UInt64 /**< ID of the last committed transaction */
+  public let latterReaderTxnId: UInt64 /**< ID of the last reader transaction */
+  public let selfLatterReaderTxnId: UInt64 /**< ID of the last reader transaction of caller process */
+  public let meta0_txnId, meta0_sign: UInt64
+  public let meta1_txnId, meta1_sign: UInt64
+  public let meta2_txnId, meta2_sign: UInt64
   
-  let maxReaders: UInt32 /**< Total reader slots in the environment */
-  let numReaders: UInt32 /**< Max reader slots used in the environment */
-  let databasePageSize: UInt32 /**< Database pagesize */
-  let systemPageSize: UInt32 /**< System pagesize */
+  public let maxReaders: UInt32 /**< Total reader slots in the environment */
+  public let numReaders: UInt32 /**< Max reader slots used in the environment */
+  public let databasePageSize: UInt32 /**< Database pagesize */
+  public let systemPageSize: UInt32 /**< System pagesize */
   
   /** Bytes not explicitly synchronized to disk */
-  let unsyncVolume: UInt64
+  public let unsyncVolume: UInt64
   /** Current auto-sync threshold, see \ref mdbx_env_set_syncbytes(). */
-  let autosyncThreshold: UInt64
+  public let autosyncThreshold: UInt64
   /** Time since the last steady sync in 1/65536 of second */
-  let timeSinceLastSync: UInt32
+  public let timeSinceLastSync: UInt32
   /** Current auto-sync period in 1/65536 of second,
   //   * see \ref mdbx_env_set_syncperiod(). */
-  let autoSyncPeriod: UInt32
+  public let autoSyncPeriod: UInt32
   //  /** Time since the last readers check in 1/65536 of second,
   //   * see \ref mdbx_reader_check(). */
-  let timeSinceLastReadersCheck: UInt32
+  public let timeSinceLastReadersCheck: UInt32
   //  /** Current environment mode.
   //   * The same as \ref mdbx_env_get_flags() returns. */
-  let mode: UInt32
+  public let mode: UInt32
 }

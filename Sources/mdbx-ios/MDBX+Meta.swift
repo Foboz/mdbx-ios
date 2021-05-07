@@ -10,7 +10,7 @@ import libmdbx_ios
 
 /** \brief The shortcut to calling \ref mdbx_dbi_flags_ex() with `state=NULL`
  * for discarding it result. \ingroup c_statinfo */
-func databaseFlags(transaction: MDBXTransaction, database: MDBXDatabase, flags: inout MDBXDatabaseFlags) throws {
+public func databaseFlags(transaction: MDBXTransaction, database: MDBXDatabase, flags: inout MDBXDatabaseFlags) throws {
   var rawValue: UInt32 = 0
   try withUnsafeMutablePointer(to: &rawValue) { pointer in
     let code = mdbx_dbi_flags(transaction._txn, database._dbi, pointer)
@@ -32,7 +32,7 @@ func databaseFlags(transaction: MDBXTransaction, database: MDBXDatabase, flags: 
  *
  * \returns A non-zero error value on failure and 0 on success. */
 
-func databaseFlagsEx(
+public func databaseFlagsEx(
   transaction: MDBXTransaction,
   database: MDBXDatabase,
   flags: inout MDBXDatabaseFlags,
@@ -72,7 +72,7 @@ func databaseFlagsEx(
  * \retval MDBX_EINVAL       An invalid parameter was specified.
  * \retval MDBX_RESULT_TRUE  The dbi isn't a dupsort (multi-value) database. */
 
-func databaseDupSortDepthMask(transaction: MDBXTransaction, database: MDBXDatabase, mask: inout UInt32) throws {
+public func databaseDupSortDepthMask(transaction: MDBXTransaction, database: MDBXDatabase, mask: inout UInt32) throws {
     try withUnsafeMutablePointer(to: &mask) { pointer in
         let code = mdbx_dbi_dupsort_depthmask(transaction._txn, database._dbi, pointer)
         guard code != 0, let error = MDBXError(code: code) else {
@@ -98,7 +98,7 @@ func databaseDupSortDepthMask(transaction: MDBXTransaction, database: MDBXDataba
  * \retval MDBX_EINVAL   An invalid parameter was specified. */
 
 // TODO: check with tests
-func databaseStat(transaction: MDBXTransaction, database: MDBXDatabase) throws -> MDBXStat {
+public func databaseStat(transaction: MDBXTransaction, database: MDBXDatabase) throws -> MDBXStat {
     var stat = MDBX_stat()
     let size = MemoryLayout.size(ofValue: stat)
     
@@ -127,7 +127,7 @@ func databaseStat(transaction: MDBXTransaction, database: MDBXDatabase) throws -
  * \details Default size of database page depends on the size of the system
  * page and usually exactly match it. */
 
-func defaultPageSize() -> Int {
+public func defaultPageSize() -> Int {
     return mdbx_default_pagesize()
 }
 
@@ -135,7 +135,7 @@ func defaultPageSize() -> Int {
  * \ingroup c_statinfo
  */
 
-func getSysRamInfo(pageSize: inout Int, totalPages: inout Int, availPages: inout Int) {
+public func getSysRamInfo(pageSize: inout Int, totalPages: inout Int, availPages: inout Int) {
     _ = withUnsafeMutablePointer(to: &pageSize) { pageSizePointer in
         withUnsafeMutablePointer(to: &totalPages) { totalPagesPointer in
             withUnsafeMutablePointer(to: &availPages) { availPagesPointer in
@@ -149,7 +149,7 @@ func getSysRamInfo(pageSize: inout Int, totalPages: inout Int, availPages: inout
  * or -1 if pagesize is invalid.
  * \ingroup c_statinfo */
 
-func maxDatabaseSize(for pageSize: Int) -> Int {
+public func maxDatabaseSize(for pageSize: Int) -> Int {
     return mdbx_limits_dbsize_max(pageSize)
 }
 
@@ -157,7 +157,7 @@ func maxDatabaseSize(for pageSize: Int) -> Int {
  * or -1 if pagesize is invalid.
  * \ingroup c_statinfo */
 
-func minDatabaseSize(for pageSize: Int) -> Int {
+public func minDatabaseSize(for pageSize: Int) -> Int {
     return mdbx_limits_dbsize_min(pageSize)
 }
 
@@ -166,21 +166,21 @@ func minDatabaseSize(for pageSize: Int) -> Int {
  * \ingroup c_statinfo
  * \see db_flags */
 
-func maxKeySize(for pageSize: Int, flags: MDBXDatabaseFlags) -> Int {
+public func maxKeySize(for pageSize: Int, flags: MDBXDatabaseFlags) -> Int {
     return mdbx_limits_keysize_max(pageSize, flags.MDBX_db_flags_t)
 }
 
 /** \brief Returns the maximal database page size in bytes.
  * \ingroup c_statinfo */
 
-func maxPageSize() -> Int {
+public func maxPageSize() -> Int {
     return mdbx_limits_pgsize_max()
 }
 
 /** \brief Returns the minimal database page size in bytes.
  * \ingroup c_statinfo */
 
-func minPageSize() -> Int {
+public func minPageSize() -> Int {
     return mdbx_limits_pgsize_min()
 }
 
@@ -188,7 +188,7 @@ func minPageSize() -> Int {
  * of dirty pages) in bytes for given page size, or -1 if pagesize is invalid.
  * \ingroup c_statinfo */
 
-func maxTransactionSize(for pageSize: Int) -> Int {
+public func maxTransactionSize(for pageSize: Int) -> Int {
     return mdbx_limits_txnsize_max(pageSize)
 }
 
@@ -197,6 +197,6 @@ func maxTransactionSize(for pageSize: Int) -> Int {
  * \ingroup c_statinfo
  * \see db_flags */
 
-func maxValueSize(for pageSize: Int, flags: MDBXDatabaseFlags) -> Int {
+public func maxValueSize(for pageSize: Int, flags: MDBXDatabaseFlags) -> Int {
     return mdbx_limits_valsize_max(pageSize, flags.MDBX_db_flags_t)
 }

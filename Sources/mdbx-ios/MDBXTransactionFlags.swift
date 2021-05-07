@@ -17,8 +17,12 @@ import libmdbx_ios
  *
  * - Tag: MDBXTransactionFlags
  */
-struct MDBXTransactionFlags: OptionSet {
-  let rawValue: UInt32
+public struct MDBXTransactionFlags: OptionSet {
+  public let rawValue: UInt32
+  
+  public init(rawValue: UInt32) {
+    self.rawValue = rawValue
+  }
   /**
    * Start read-write transaction.
    *
@@ -26,7 +30,7 @@ struct MDBXTransactionFlags: OptionSet {
    *
    * - Tag: MDBXTransactionFlags.readWrite
    */
-  static let readWrite = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_READWRITE.rawValue)
+  public static let readWrite = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_READWRITE.rawValue)
   
   /**
    * Start read-only transaction.
@@ -35,7 +39,7 @@ struct MDBXTransactionFlags: OptionSet {
    *
    * - Tag: MDBXTransactionFlags.readOnly
    */
-  static let readOnly = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_RDONLY.rawValue)
+  public static let readOnly = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_RDONLY.rawValue)
   
   /**
    * Prepare but not start read-only transaction.
@@ -45,28 +49,28 @@ struct MDBXTransactionFlags: OptionSet {
    *
    * - Tag: MDBXTransactionFlags.readOnlyPrepare
    */
-  static let readOnlyPrepare = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_RDONLY_PREPARE.rawValue)
+  public static let readOnlyPrepare = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_RDONLY_PREPARE.rawValue)
   
   /**
    * Do not block when starting a write transaction.
    *
    * - Tag: MDBXTransactionFlags.try
    */
-  static let `try` = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_TRY.rawValue)
+  public static let `try` = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_TRY.rawValue)
   
   /**
    * Exactly the same as \ref MDBX_NOMETASYNC, but for this transaction only
    *
    * - Tag: MDBXTransactionFlags.noMetaSync
    */
-  static let noMetaSync = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_NOMETASYNC.rawValue)
+  public static let noMetaSync = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_NOMETASYNC.rawValue)
   
   /**
    * Exactly the same as \ref MDBX_SAFE_NOSYNC, but for this transaction only
    *
    * - Tag: MDBXTransactionFlags.noSync
    */
-  static let noSync = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_NOSYNC.rawValue)
+  public static let noSync = MDBXTransactionFlags(rawValue: libmdbx_ios.MDBX_TXN_NOSYNC.rawValue)
 }
 
 internal extension MDBXTransactionFlags {

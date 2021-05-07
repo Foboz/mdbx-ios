@@ -12,14 +12,14 @@ import libmdbx_ios
  * \warning This structure may be changed in future releases.
  * \see mdbx_txn_commit_ex() */
 
-struct MDBXCommitLatency {
-  let preparation: UInt32
-  let gc: UInt32
-  let audit: UInt32
-  let write: UInt32
-  let sync: UInt32
-  let ending: UInt32
-  let whole: UInt32
+public struct MDBXCommitLatency {
+  public let preparation: UInt32
+  public let gc: UInt32
+  public let audit: UInt32
+  public let write: UInt32
+  public let sync: UInt32
+  public let ending: UInt32
+  public let whole: UInt32
 }
 
 extension MDBXCommitLatency {

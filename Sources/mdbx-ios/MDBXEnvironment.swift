@@ -22,9 +22,9 @@ import libmdbx_ios
 internal typealias MDBX_env = OpaquePointer
 
 
-typealias MDBXEnvironmentHandleSlowRead = (_ environment: MDBXEnvironment?, _ transaction: MDBXTransaction?, _ processId: pid_t, _ threadId: pthread_t?, _ laggard: UInt64, _ gap: UInt32, _ space: Int, _ retry: Int32) -> Int32
+public typealias MDBXEnvironmentHandleSlowRead = (_ environment: MDBXEnvironment?, _ transaction: MDBXTransaction?, _ processId: pid_t, _ threadId: pthread_t?, _ laggard: UInt64, _ gap: UInt32, _ space: Int, _ retry: Int32) -> Int32
 
-class MDBXEnvironment {
+public class MDBXEnvironment {
   internal enum MDBXEnvironmentState {
     case unknown
     case created
@@ -60,7 +60,7 @@ class MDBXEnvironment {
    * - Tag: MDBXEnvironment.create
    */
 
-  func create() throws {
+  public func create() throws {
     guard self._state == .unknown else { throw MDBXError.alreadyCreated }
     let code = withUnsafeMutablePointer(to: &_env) { pointer in
       return mdbx_env_create(pointer)
@@ -149,7 +149,7 @@ class MDBXEnvironment {
    *
    * - Tag: MDBXEnvironment.open
    */
-  func open(path: String, flags: MDBXEnvironmentFlags, mode: MDBXEnvironmentMode) throws {
+  public func open(path: String, flags: MDBXEnvironmentFlags, mode: MDBXEnvironmentMode) throws {
     guard self._state == .created else {
       if self._state == .unknown { throw MDBXError.notCreated }
       else { throw MDBXError.alreadyOpened }
@@ -192,7 +192,7 @@ class MDBXEnvironment {
    *
    * - Tag: MDBXEnvironment.close
    */
-  func close(_ dontSync: Bool = false) {
+  public func close(_ dontSync: Bool = false) {
     guard self._state == .opened else {
       return
     }
@@ -208,7 +208,7 @@ class MDBXEnvironment {
    * \returns The pointer set by \ref mdbx_env_set_userctx() or `NULL` if something wrong.
    */
 
-  func unsafeGetContext<T>() -> T? {
+  public func unsafeGetContext<T>() -> T? {
     guard self._state != .unknown else { return nil }
     
     guard let contextPointer = mdbx_env_get_userctx(self._env) else { return nil }
@@ -226,7 +226,7 @@ class MDBXEnvironment {
    *
    * \returns A non-zero error value on failure and 0 on success.
    */
-  func unsafeSetContext<T>(_ context: inout T) throws {
+  public func unsafeSetContext<T>(_ context: inout T) throws {
     guard self._state != .unknown else { return }
     
     let code = withUnsafeMutableBytes(of: &context, { contextPointer in
@@ -258,7 +258,7 @@ class MDBXEnvironment {
    *          some possible errors are:
    * \retval MDBX_EINVAL   An invalid parameter was specified.
    * \retval MDBX_EPERM    The environment is already open. */
-  func setMaxReader(_ reader: UInt32) throws {
+  public func setMaxReader(_ reader: UInt32) throws {
     let code = mdbx_env_set_maxreaders(self._env, reader)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -285,7 +285,7 @@ class MDBXEnvironment {
    *          some possible errors are:
    * \retval MDBX_EINVAL   An invalid parameter was specified.
    * \retval MDBX_EPERM    The environment is already open. */
-  func setMaxDatabases(_ dbs: UInt32) throws {
+  public func setMaxDatabases(_ dbs: UInt32) throws {
     let code = mdbx_env_set_maxdbs(self._env, dbs)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -475,7 +475,7 @@ class MDBXEnvironment {
    * \retval MDBX_TOO_LARGE Specified size is too large, i.e. too many pages for
    *                        given size, or a 32-bit process requests too much
    *                        bytes for the 32-bit address space. */
-  func setGeometry(_ geometry: MDBXGeometry) throws {
+  public func setGeometry(_ geometry: MDBXGeometry) throws {
     let code = mdbx_env_set_geometry(self._env,
                                      geometry.sizeLower,
                                      geometry.sizeNow,
@@ -504,7 +504,7 @@ class MDBXEnvironment {
    *
    * \returns A non-zero error value on failure and 0 on success. */
   
-  func setHandleSlowReaders(_ handle: MDBXEnvironmentHandleSlowRead?) throws {
+  public func setHandleSlowReaders(_ handle: MDBXEnvironmentHandleSlowRead?) throws {
     let code: Int32
     if let handle = handle {
       

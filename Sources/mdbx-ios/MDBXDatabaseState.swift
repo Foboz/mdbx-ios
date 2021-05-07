@@ -8,20 +8,24 @@
 import Foundation
 import libmdbx_ios
 
-struct MDBXDatabseState: OptionSet {
-  let rawValue: UInt32
+public struct MDBXDatabseState: OptionSet {
+  public let rawValue: UInt32
+  
+  public init(rawValue: UInt32) {
+    self.rawValue = rawValue
+  }
   
   // DB was written in this txn
-  static let dirty: MDBXDatabseState = .init(rawValue: MDBX_DBI_DIRTY.rawValue)
+  public static let dirty: MDBXDatabseState = .init(rawValue: MDBX_DBI_DIRTY.rawValue)
   
   /** Named-DB record is older than txnID */
-  static let stale: MDBXDatabseState = .init(rawValue: MDBX_DBI_STALE.rawValue)
+  public static let stale: MDBXDatabseState = .init(rawValue: MDBX_DBI_STALE.rawValue)
   
   /** Named-DB handle opened in this txn */
-  static let fresh: MDBXDatabseState = .init(rawValue: MDBX_DBI_FRESH.rawValue)
+  public static let fresh: MDBXDatabseState = .init(rawValue: MDBX_DBI_FRESH.rawValue)
   
   /** Named-DB handle created in this txn */
-  static let created: MDBXDatabseState = .init(rawValue: MDBX_DBI_CREAT.rawValue)
+  public static let created: MDBXDatabseState = .init(rawValue: MDBX_DBI_CREAT.rawValue)
 }
 
 internal extension MDBXDatabseState {

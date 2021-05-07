@@ -8,35 +8,39 @@
 import Foundation
 import libmdbx_ios
 
-struct MDBXDatabaseFlags: OptionSet {
-  let rawValue: UInt32
+public struct MDBXDatabaseFlags: OptionSet {
+  public let rawValue: UInt32
   
-  static let defaults = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DB_DEFAULTS.rawValue)
+  public init(rawValue: UInt32) {
+    self.rawValue = rawValue
+  }
+  
+  public static let defaults = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DB_DEFAULTS.rawValue)
   
   /** Use reverse string keys */
-  static let reverseKey = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_REVERSEKEY.rawValue)
+  public static let reverseKey = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_REVERSEKEY.rawValue)
   
   /** Use sorted duplicates, i.e. allow multi-values */
-  static let dupSort = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DUPSORT.rawValue)
+  public static let dupSort = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DUPSORT.rawValue)
   
   /** Numeric keys in native byte order either uint32_t or uint64_t. The keys
   * must all be of the same size and must be aligned while passing as
   * arguments. */
-  static let integerKey = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_INTEGERKEY.rawValue)
+  public static let integerKey = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_INTEGERKEY.rawValue)
   
   /** With \ref MDBX_DUPSORT; sorted dup items have fixed size */
-  static let dupFixed = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DUPFIXED.rawValue)
+  public static let dupFixed = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_DUPFIXED.rawValue)
   
   /** With \ref MDBX_DUPSORT and with \ref MDBX_DUPFIXED; dups are fixed size
   * \ref MDBX_INTEGERKEY -style integers. The data values must all be of the
   * same size and must be aligned while passing as arguments. */
-  static let integerDup = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_INTEGERDUP.rawValue)
+  public static let integerDup = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_INTEGERDUP.rawValue)
   
   /** With \ref MDBX_DUPSORT; use reverse string comparison */
-  static let reverseDup = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_REVERSEDUP.rawValue)
+  public static let reverseDup = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_REVERSEDUP.rawValue)
   
   /** Create DB if not already existing */
-  static let create = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_CREATE.rawValue)
+  public static let create = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_CREATE.rawValue)
   
   /** Opens an existing sub-database created with unknown flags.
    *
@@ -48,7 +52,7 @@ struct MDBXDatabaseFlags: OptionSet {
    * In such cases, instead of returning the \ref MDBX_INCOMPATIBLE error, the
    * sub-database will be opened with flags which it was created, and then an
    * application could determine the actual flags by \ref mdbx_dbi_flags(). */
-  static let accede = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_ACCEDE.rawValue)
+  public static let accede = MDBXDatabaseFlags(rawValue: libmdbx_ios.MDBX_ACCEDE.rawValue)
 }
 
 internal extension MDBXDatabaseFlags {

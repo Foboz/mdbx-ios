@@ -10,7 +10,7 @@ import libmdbx_ios
 
 internal typealias MDBX_dbi = UInt32
 
-final class MDBXDatabase {
+public final class MDBXDatabase {
   internal var _dbi: MDBX_dbi = 0
   internal var _env: MDBXEnvironment?
   
@@ -123,7 +123,7 @@ final class MDBXDatabase {
    * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
    *                               by current thread. */
 
-  func open(
+  public func open(
     transaction: MDBXTransaction,
     name: String?,
     flags: MDBXDatabaseFlags
@@ -166,7 +166,7 @@ final class MDBXDatabase {
    *
    * \returns A non-zero error value on failure and 0 on success. */
 
-  func close() {
+  public func close() {
     guard let env = _env else {
       return
     }

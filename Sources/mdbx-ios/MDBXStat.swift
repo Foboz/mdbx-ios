@@ -7,25 +7,25 @@
 
 import Foundation
 
-struct MDBXStat {
+public struct MDBXStat {
   // Size of a database page. This is the same for all databases
-  let pSize: UInt32
+  public let pSize: UInt32
   // Depth (height) of the B-tree
-  let depth: UInt32
+  public let depth: UInt32
   // Number of internal (non-leaf) pages
-  let branchPages: UInt64
+  public let branchPages: UInt64
   // Number of leaf pages
-  let leafPages: UInt64
+  public let leafPages: UInt64
   // Number of overflow pages
-  let overflowPages: UInt64
+  public let overflowPages: UInt64
   // Number of data items
-  let entries: UInt64
+  public let entries: UInt64
   // Transaction ID of committed last modification
-  let modTransactionId: UInt64
+  public let modTransactionId: UInt64
 }
 
 extension MDBXStat {
-    static var empty: MDBXStat = .init(
+    public static var empty: MDBXStat = .init(
         pSize: 0,
         depth: 0,
         branchPages: 0,

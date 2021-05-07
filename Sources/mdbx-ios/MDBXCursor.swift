@@ -10,7 +10,7 @@ import libmdbx_ios
 
 internal typealias MDBX_cursor = OpaquePointer
 
-final class MDBXCursor {
+public final class MDBXCursor {
   internal var _cursor: MDBX_cursor!
   
   /** \brief Create a cursor handle but not bind it to transaction nor DBI handle.
@@ -38,7 +38,7 @@ final class MDBXCursor {
    *
    * \returns Created cursor handle or NULL in case out of memory. */
 
-  func create(context: inout Any) throws {
+  public func create(context: inout Any) throws {
     _cursor = try withUnsafeMutableBytes(of: &context) { contextPointer in
       guard let _cursor = mdbx_cursor_create(contextPointer.baseAddress) else {
         throw MDBXError.ENOMEM
@@ -73,7 +73,7 @@ final class MDBXCursor {
    *
    * \returns Created cursor handle or NULL in case out of memory. */
 
-  func create() throws {
+  public func create() throws {
     _cursor = mdbx_cursor_create(nil)
   }
   
@@ -110,7 +110,7 @@ final class MDBXCursor {
    *                               by current thread.
    * \retval MDBX_EINVAL  An invalid parameter was specified. */
 
-  func open(transaction: MDBXTransaction, database: MDBXDatabase) throws {
+  public func open(transaction: MDBXTransaction, database: MDBXDatabase) throws {
     let code = mdbx_cursor_open(transaction._txn, database._dbi, &_cursor)
     
     guard code != 0, let error = MDBXError(code: code) else {
@@ -146,7 +146,7 @@ final class MDBXCursor {
    *                               by current thread.
    * \retval MDBX_EINVAL  An invalid parameter was specified. */
 
-  func bind(transaction: MDBXTransaction, database: MDBXDatabase) throws {
+  public func bind(transaction: MDBXTransaction, database: MDBXDatabase) throws {
     
     let code = mdbx_cursor_bind(transaction._txn, _cursor, database._dbi)
     
@@ -167,7 +167,7 @@ final class MDBXCursor {
    *
    * \returns A non-zero error value on failure and 0 on success. */
 
-  func copy(cursor: MDBXCursor) throws {
+  public func copy(cursor: MDBXCursor) throws {
     let code = mdbx_cursor_copy(cursor._cursor, _cursor)
     guard code != 0, let error = MDBXError(code: code) else {
       return
@@ -180,7 +180,7 @@ final class MDBXCursor {
    *
    * \param [in] cursor  A cursor handle returned by \ref mdbx_cursor_open(). */
 
-  func dbi() -> MDBXDatabase {
+  public func dbi() -> MDBXDatabase {
     let dbi = mdbx_cursor_dbi(_cursor)
     return MDBXDatabase(dbi: dbi)
   }
@@ -198,7 +198,7 @@ final class MDBXCursor {
    * \retval MDBX_RESULT_FALSE   A data is available
    * \retval Otherwise the error code */
 
-  func eof() throws -> Bool {
+  public func eof() throws -> Bool {
     let code = mdbx_cursor_eof(_cursor)
     
     guard code != 0, let error = MDBXError(code: code) else {
@@ -217,7 +217,7 @@ final class MDBXCursor {
    *          of `mdbx_cursor_create()` or set by \ref mdbx_cursor_set_userctx(),
    *          or `NULL` if something wrong. */
 
-  func unsafeGetContext<T>() -> T? {
+  public func unsafeGetContext<T>() -> T? {
     guard let contextPointer = mdbx_cursor_get_userctx(_cursor) else { return nil }
     
     return contextPointer.load(as: T.self)
@@ -234,7 +234,7 @@ final class MDBXCursor {
    * \retval MDBX_RESULT_FALSE  Cursor NOT positioned to the first key-value
    * pair \retval Otherwise the error code */
 
-  func onFirst() throws -> Bool {
+  public func onFirst() throws -> Bool {
     let code = mdbx_cursor_on_first(_cursor)
     
     guard code != 0, let error = MDBXError(code: code) else {
@@ -254,7 +254,7 @@ final class MDBXCursor {
    * \retval MDBX_RESULT_FALSE  Cursor NOT positioned to the last key-value pair
    * \retval Otherwise the error code */
 
-  func onLast() throws -> Bool {
+  public func onLast() throws -> Bool {
     let code = mdbx_cursor_on_last(_cursor)
     
     guard code != 0, let error = MDBXError(code: code) else {
@@ -288,7 +288,7 @@ final class MDBXCursor {
    *                               by current thread.
    * \retval MDBX_EINVAL  An invalid parameter was specified. */
 
-  func renew(transaction: MDBXTransaction) throws {
+  public func renew(transaction: MDBXTransaction) throws {
     let code = mdbx_cursor_renew(transaction._txn, _cursor)
     
     guard code != 0, let error = MDBXError(code: code) else {
@@ -307,7 +307,7 @@ final class MDBXCursor {
    *
    * \returns A non-zero error value on failure and 0 on success. */
   
-  func unsafeSetContext<T>(_ context: inout T) throws {
+  public func unsafeSetContext<T>(_ context: inout T) throws {
     let code = withUnsafeMutableBytes(of: &context, { contextPointer in
       mdbx_cursor_set_userctx(_cursor, contextPointer.baseAddress)
     })
@@ -318,7 +318,7 @@ final class MDBXCursor {
     throw error
   }
   
-//  func transaction() -> MDBXTransaction {
+//  public func transaction() -> MDBXTransaction {
 //    let txn = mdbx_cursor_txn(_cursor)
 //    let transaction = MDBXTransaction(<#MDBXEnvironment#>)
 //    transaction._txn = txn
@@ -341,7 +341,7 @@ final class MDBXCursor {
    * \param [in] cursor  A cursor handle returned by \ref mdbx_cursor_open()
    *                     or \ref mdbx_cursor_create(). */
 
-  func close() {
+  public func close() {
     mdbx_cursor_close(_cursor)
   }
 }

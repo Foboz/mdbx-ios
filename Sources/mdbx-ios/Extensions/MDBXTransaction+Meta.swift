@@ -8,7 +8,7 @@
 import Foundation
 import libmdbx_ios
 
-extension MDBXTransaction {
+public extension MDBXTransaction {
   /** \brief Determines whether the given address is on a dirty database page of
    * the transaction or not. \ingroup c_statinfo
    *

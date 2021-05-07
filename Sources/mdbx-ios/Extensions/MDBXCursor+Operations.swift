@@ -8,7 +8,7 @@
 import Foundation
 import libmdbx_ios
 
-extension MDBXCursor {
+public extension MDBXCursor {
   /** \brief Return count of duplicates for current key.
    * \ingroup c_cursors c_crud
    *

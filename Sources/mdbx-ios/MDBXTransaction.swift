@@ -22,7 +22,7 @@ import libmdbx_ios
  */
 internal typealias MDBX_txn = OpaquePointer
 
-final class MDBXTransaction {
+public final class MDBXTransaction {
   internal var _txn: MDBX_txn!
   
   /**
@@ -122,7 +122,7 @@ final class MDBXTransaction {
    *    - MDBX_BUSY:
    *      The write transaction is already started by the current thread.
    */
-  func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags, context: inout Any) throws {
+  public func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags, context: inout Any) throws {
     let code = withUnsafeMutablePointer(to: &self._txn) { pointer -> Int32 in
       return withUnsafeMutableBytes(of: &context, { contextPointer in
         return mdbx_txn_begin_ex(self.environment._env,
@@ -190,7 +190,7 @@ final class MDBXTransaction {
    * \retval MDBX_BUSY          The write transaction is already started by the
    *                            current thread.
    */
-  func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags) throws {
+  public func begin(parent: MDBXTransaction? = nil, flags: MDBXTransactionFlags) throws {
     let code = withUnsafeMutablePointer(to: &self._txn) { pointer -> Int32 in
       return mdbx_txn_begin(self.environment._env,
                             parent?._txn,
@@ -209,7 +209,7 @@ final class MDBXTransaction {
    *   The pointer which was passed via the `context` parameter of `mdbx_txn_begin_ex()` or set by \ref mdbx_txn_set_userctx(),
    *   or `NULL` if something wrong.
    */
-  func unsafeGetContext<T>() -> T? {
+  public func unsafeGetContext<T>() -> T? {
     guard let contextPointer = mdbx_txn_get_userctx(self._txn) else { return nil }
     
     return contextPointer.load(as: T.self)
@@ -223,7 +223,7 @@ final class MDBXTransaction {
    *   - context:
    *     An arbitrary pointer for whatever the application needs.
    */
-  func unsafeSetContext<T>(_ context: inout T) throws {
+  public func unsafeSetContext<T>(_ context: inout T) throws {
     let code = withUnsafeMutableBytes(of: &context, { contextPointer in
       mdbx_txn_set_userctx(self._txn, contextPointer.baseAddress)
     })
@@ -235,7 +235,7 @@ final class MDBXTransaction {
   /**
    * Resets mdbx transaction context
    */
-  func unsafeResetContext() throws {
+  public func unsafeResetContext() throws {
     let code = mdbx_txn_set_userctx(self._txn, nil)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -244,13 +244,13 @@ final class MDBXTransaction {
   /**
    * Marks transaction as broken.
    *
-   * Function keeps the transaction handle and corresponding locks, but it is not possible to perform any operations in a broken transaction.
+   * public function keeps the transaction handle and corresponding locks, but it is not possible to perform any operations in a broken transaction.
    * Broken transaction must then be aborted explicitly later.
    *
    * \see mdbx_txn_abort() \see mdbx_txn_reset() \see mdbx_txn_commit()
    * \returns A non-zero error value on failure and 0 on success.
    */
-  func `break`() throws {
+  public func `break`() throws {
     let code = mdbx_txn_break(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -293,7 +293,7 @@ final class MDBXTransaction {
    *   - MDBX_ENOMEM:
    *     Out of memory.
    */
-  func commit() throws {
+  public func commit() throws {
     let code = mdbx_txn_commit(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -325,7 +325,7 @@ final class MDBXTransaction {
    *   - MDBX_EINVAL:
    *     Transaction handle is NULL.
    */
-  func reset() throws {
+  public func reset() throws {
     let code = mdbx_txn_reset(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -350,7 +350,7 @@ final class MDBXTransaction {
    * - MDBX_EINVAL:
    *   Transaction handle is NULL.
    */
-  func renew() throws {
+  public func renew() throws {
     let code = mdbx_txn_renew(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
@@ -386,7 +386,7 @@ final class MDBXTransaction {
    *   - MDBX_EINVAL
    *     Transaction handle is NULL.
    */
-  func abort() throws {
+  public func abort() throws {
     let code = mdbx_txn_abort(self._txn)
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
