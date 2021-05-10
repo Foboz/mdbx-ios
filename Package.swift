@@ -10,7 +10,10 @@ let package = Package(
   products: [
     .library(
       name: "mdbx-ios",
-      targets: ["libmdbx_ios"]),
+      targets: ["mdbx-ios"]),
+    .library(
+      name: "libmdbx_ios",
+      targets: ["libmdbx_ios"])
   ],
   dependencies: [
   ],
