@@ -28,7 +28,7 @@ public final class MDBXTransaction {
   /**
    * Returns the transaction's MDBX_env.
    */
-  let environment: MDBXEnvironment
+  public let environment: MDBXEnvironment
   
   /**
    * Return the transaction's flags.
@@ -38,7 +38,7 @@ public final class MDBXTransaction {
    * # Returns:
    *   A transaction flags, valid if input is an valid transaction, otherwise -1.
    */
-  var flags: MDBXTransactionFlags {
+  public var flags: MDBXTransactionFlags {
     let flags = mdbx_txn_flags(self._txn)
     return MDBXTransactionFlags(rawValue: UInt32(flags))
   }
@@ -52,7 +52,7 @@ public final class MDBXTransaction {
    * # Returns:
    *   A transaction ID, valid if input is an active transaction, otherwise 0.
    */
-  var transactionId: UInt64 {
+  public var transactionId: UInt64 {
     return mdbx_txn_id(self._txn)
   }
   
@@ -60,14 +60,14 @@ public final class MDBXTransaction {
    * Swift-level of get/Set the application information associated with the MDBXTransaction.
    * /see unsafeSetContext(), /see unsafeGetContext()
    */
-  var context: Any?
+  public var context: Any?
   
   /**
    * - Parameters:
    *    - environment:
    *      An environment handle returned by \ref mdbx_env_create().
    */
-  init(_ environment: MDBXEnvironment) {
+  public init(_ environment: MDBXEnvironment) {
     self.environment = environment
   }
   

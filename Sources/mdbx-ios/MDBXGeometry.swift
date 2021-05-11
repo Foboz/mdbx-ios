@@ -15,7 +15,7 @@ public struct MDBXGeometry {
   public let shrinkThreshold: Int
   public let pageSize: Int
   
-  init(sizeLower: Int, sizeNow: Int, sizeUpper: Int, growthStep: Int, shrinkThreshold: Int, pageSize: Int) {
+  public init(sizeLower: Int, sizeNow: Int, sizeUpper: Int, growthStep: Int, shrinkThreshold: Int, pageSize: Int) {
     self.sizeLower = sizeLower
     self.sizeNow = sizeNow
     self.sizeUpper = sizeUpper

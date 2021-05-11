@@ -18,7 +18,7 @@ public final class MDBXDatabase {
     _dbi = dbi
   }
   
-  init() {
+  public init() {
     
   }
   

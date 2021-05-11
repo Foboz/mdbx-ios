@@ -34,7 +34,7 @@ public class MDBXEnvironment {
   internal var _env: MDBX_env!
   internal var _state: MDBXEnvironmentState = .unknown
   
-  init() {}
+  public init() {}
   
   deinit {
     if _state == .opened {
