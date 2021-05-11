@@ -13,6 +13,8 @@ internal typealias MDBX_cursor = OpaquePointer
 public final class MDBXCursor {
   internal var _cursor: MDBX_cursor!
   
+  public init() {}
+  
   /** \brief Create a cursor handle but not bind it to transaction nor DBI handle.
    * \ingroup c_cursors
    *
