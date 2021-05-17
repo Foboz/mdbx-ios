@@ -8,15 +8,7 @@
 import Foundation
 import libmdbx_ios
 
-extension MDBX_val {
-  init(data: inout Data) {
-    self.init()
-    withUnsafeMutableBytes(of: &data, {
-      self.iov_base = $0.baseAddress
-    })
-    self.iov_len = data.count
-  }
-  
+extension MDBX_val {  
   var data: Data {
     guard iov_base != nil else {
       return Data()

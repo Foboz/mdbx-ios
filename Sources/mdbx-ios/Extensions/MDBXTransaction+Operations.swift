@@ -40,15 +40,20 @@ public extension MDBXTransaction {
    * \retval MDBX_EINVAL    An invalid parameter was specified.*/
 
   func getValue(for key: inout Data, database: MDBXDatabase) throws -> Data {
-    var mdbxKey = MDBX_val(data: &key)
-    
-    var data: MDBX_val = .init()
-    let code = mdbx_get(_txn, database._dbi, &mdbxKey, &data)
-    guard code != 0, let error = MDBXError(code: code) else {
-      return data.data
+    let keyCount = key.count
+    return try key.withUnsafeMutableBytes { keyPointer in
+        var mdbxKey = MDBX_val()
+        mdbxKey.iov_base = keyPointer.baseAddress
+        mdbxKey.iov_len = keyCount
+        
+        var data: MDBX_val = .init()
+        let code = mdbx_get(_txn, database._dbi, &mdbxKey, &data)
+        guard code != 0, let error = MDBXError(code: code) else {
+          return data.data
+        }
+        
+        throw error
     }
-    
-    throw error
   }
   
   /** \brief Get equal or great item from a database.
@@ -81,16 +86,23 @@ public extension MDBXTransaction {
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
   func getValueEqualOrGreater(for key: inout Data, database: MDBXDatabase) throws -> Data {
-    var mdbxKey = MDBX_val(data: &key)
-    var data: MDBX_val = .init()
+    let keyCount = key.count
+    var localKey = key
+    return try localKey.withUnsafeMutableBytes { keyPointer in
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
 
-    let code = mdbx_get_equal_or_great(_txn, database._dbi, &mdbxKey, &data)
-    key = mdbxKey.data
-    guard code != 0, let error = MDBXError(code: code) else {
-        return data.data
+      var data: MDBX_val = .init()
+
+      let code = mdbx_get_equal_or_great(_txn, database._dbi, &mdbxKey, &data)
+      key = mdbxKey.data
+      guard code != 0, let error = MDBXError(code: code) else {
+          return data.data
+      }
+
+      throw error
     }
-
-    throw error
   }
   
   /** \brief Get items from a database
@@ -124,16 +136,23 @@ public extension MDBXTransaction {
    * \retval MDBX_NOTFOUND  The key was not in the database.
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
   func getValueEx(for key: inout Data, database: MDBXDatabase, valuesCount: inout Int) throws -> Data {
-    var mdbxKey = MDBX_val(data: &key)
-    var data: MDBX_val = .init()
+    let keyCount = key.count
+    var localKey = key
+    return try localKey.withUnsafeMutableBytes { keyPointer in
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
 
-    let code = mdbx_get_ex(_txn, database._dbi, &mdbxKey, &data, &valuesCount)
-    key = mdbxKey.data
-    guard code != 0, let error = MDBXError(code: code) else {
-        return data.data
+      var data: MDBX_val = .init()
+
+      let code = mdbx_get_ex(_txn, database._dbi, &mdbxKey, &data, &valuesCount)
+      key = mdbxKey.data
+      guard code != 0, let error = MDBXError(code: code) else {
+          return data.data
+      }
+
+      throw error
     }
-
-    throw error
   }
   
   /** \brief Store items into a database.
@@ -224,14 +243,26 @@ public extension MDBXTransaction {
     database: MDBXDatabase,
     flags: MDBXPutFlags
   ) throws {
-    var mdbxKey = MDBX_val(data: &key)
-    var mdbxValue = MDBX_val(data: &value)
+    let keyCount = key.count
+    let valueCount = value.count
     
-    let code = mdbx_put(_txn, database._dbi, &mdbxKey, &mdbxValue, flags.MDBX_put_flags_t)
-    guard code != 0, let error = MDBXError(code: code) else {
-      return
+    try key.withUnsafeMutableBytes { keyPointer in
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
+      
+      try value.withUnsafeMutableBytes { valuePointer in
+        var mdbxValue = MDBX_val()
+        mdbxValue.iov_base = valuePointer.baseAddress
+        mdbxValue.iov_len = valueCount
+        
+        let code = mdbx_put(_txn, database._dbi, &mdbxKey, &mdbxValue, flags.MDBX_put_flags_t)
+        guard code != 0, let error = MDBXError(code: code) else {
+          return
+        }
+        throw error
+      }
     }
-    throw error
   }
   
   /** \brief Delete items from a database.
@@ -261,15 +292,20 @@ public extension MDBXTransaction {
    * \retval MDBX_EINVAL   An invalid parameter was specified. */
 
   func delete(value: Data? = nil, key: inout Data, database: MDBXDatabase) throws {
-    var mdbxKey = MDBX_val(data: &key)
-    
-    let code = mdbx_del(_txn, database._dbi, &mdbxKey, nil)
-    
-    guard code != 0, let error = MDBXError(code: code) else {
-      return
-    }
+    let keyCount = key.count
+    try key.withUnsafeMutableBytes { keyPointer in
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
+      
+      let code = mdbx_del(_txn, database._dbi, &mdbxKey, nil)
+      
+      guard code != 0, let error = MDBXError(code: code) else {
+        return
+      }
 
-    throw error
+      throw error
+    }
   }
   
   /** \brief Empty or delete and close a database.
@@ -344,18 +380,28 @@ public extension MDBXTransaction {
     database: MDBXDatabase,
     flags: MDBXPutFlags
   ) throws -> Data {
-    
-    var mdbxKey = MDBX_val(data: &key)
-    var oldMdbxValue = MDBX_val()
-    var newMdbxValue = MDBX_val(data: &new)
-    
-    let code = mdbx_replace(_txn, database._dbi, &mdbxKey, &newMdbxValue, &oldMdbxValue, flags.MDBX_put_flags_t)
-    
-    guard code != 0, let error = MDBXError(code: code) else {
-        return oldMdbxValue.data
-    }
+    let keyCount = key.count
+    let valueCount = new.count
+    return try key.withUnsafeMutableBytes { keyPointer in
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
+      
+      return try new.withUnsafeMutableBytes { valuePointer in
+        var newMdbxValue = MDBX_val()
+        newMdbxValue.iov_base = valuePointer.baseAddress
+        newMdbxValue.iov_len = valueCount
+        
+        var oldMdbxValue = MDBX_val()
+        let code = mdbx_replace(_txn, database._dbi, &mdbxKey, &newMdbxValue, &oldMdbxValue, flags.MDBX_put_flags_t)
+        
+        guard code != 0, let error = MDBXError(code: code) else {
+            return oldMdbxValue.data
+        }
 
-    throw error
+        throw error
+      }
+    }
   }
   
   /** \brief Compare two keys according to a particular database.
@@ -374,10 +420,21 @@ public extension MDBXTransaction {
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
   func compare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
-    var mdbxA = MDBX_val(data: &a)
-    var mdbxB = MDBX_val(data: &b)
+    let aCount = a.count
+    let bCount = b.count
     
-    return mdbx_cmp(_txn, database._dbi, &mdbxA, &mdbxB)
+    return a.withUnsafeMutableBytes { aPointer in
+      var mdbxA = MDBX_val()
+      mdbxA.iov_base = aPointer.baseAddress
+      mdbxA.iov_len = aCount
+
+      return b.withUnsafeMutableBytes { bPointer in
+        var mdbxB = MDBX_val()
+        mdbxB.iov_base = bPointer.baseAddress
+        mdbxB.iov_len = bCount
+        return mdbx_cmp(_txn, database._dbi, &mdbxA, &mdbxB)
+      }
+    }
   }
   
   /** \brief Sequence generation for a database.
@@ -433,10 +490,21 @@ public extension MDBXTransaction {
    * \returns < 0 if a < b, 0 if a == b, > 0 if a > b */
 
   func databaseCompare(a: inout Data, b: inout Data, database: MDBXDatabase) -> Int32 {
-    var mdbxA = MDBX_val(data: &a)
-    var mdbxB = MDBX_val(data: &b)
+    let aCount = a.count
+    let bCount = b.count
     
-    return mdbx_dcmp(_txn, database._dbi, &mdbxA, &mdbxB)
+    return a.withUnsafeMutableBytes { aPointer in
+      var mdbxA = MDBX_val()
+      mdbxA.iov_base = aPointer.baseAddress
+      mdbxA.iov_len = aCount
+
+      return b.withUnsafeMutableBytes { bPointer in
+        var mdbxB = MDBX_val()
+        mdbxB.iov_base = bPointer.baseAddress
+        mdbxB.iov_len = bCount
+        return mdbx_dcmp(_txn, database._dbi, &mdbxA, &mdbxB)
+      }
+    }
   }
   
   /** \brief Commit all the operations of a transaction into the database and

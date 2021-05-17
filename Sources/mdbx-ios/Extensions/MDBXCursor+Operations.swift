@@ -104,16 +104,22 @@ public extension MDBXCursor {
    * \retval MDBX_EINVAL    An invalid parameter was specified. */
 
   func getValue(key: inout Data, operation: MDBXCursorOperations) throws -> Data {
-    var mdbxKey = MDBX_val(data: &key)
-    var mdbxData = MDBX_val()
-    
-    let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
-    key = mdbxKey.data
-    guard code != 0, let error = MDBXError(code: code) else {
-      return mdbxData.data
+    let keyCount = key.count
+    var localKey = key
+    return try localKey.withUnsafeMutableBytes { keyPointer in
+        var mdbxKey = MDBX_val()
+        mdbxKey.iov_base = keyPointer.baseAddress
+        mdbxKey.iov_len = keyCount
+        var mdbxData = MDBX_val()
+        
+        let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
+        key = mdbxKey.data
+        guard code != 0, let error = MDBXError(code: code) else {
+          return mdbxData.data
+        }
+        
+        throw error
     }
-    
-    throw error
   }
   
   /** \brief Store by cursor.
@@ -198,15 +204,27 @@ public extension MDBXCursor {
    * \retval MDBX_EINVAL        An invalid parameter was specified. */
 
   func put(value: inout Data, key: inout Data, flags: MDBXPutFlags) throws {
-    var mdbxKey = MDBX_val(data: &key)
-    var mdbxData = MDBX_val(data: &value)
+    let keyCount = key.count
+    let valueCount = value.count
     
-    let code = mdbx_cursor_put(_cursor, &mdbxKey, &mdbxData, flags.MDBX_put_flags_t)
-    
-    guard code != 0, let error = MDBXError(code: code) else {
-      return
-    }
+    try key.withUnsafeMutableBytes { keyPointer in
+        var mdbxKey = MDBX_val()
+        mdbxKey.iov_base = keyPointer.baseAddress
+        mdbxKey.iov_len = keyCount
+        
+        try value.withUnsafeMutableBytes { valuePointer in
+            var mdbxData = MDBX_val()
+            mdbxData.iov_base = valuePointer.baseAddress
+            mdbxData.iov_len = valueCount
+            
+            let code = mdbx_cursor_put(_cursor, &mdbxKey, &mdbxData, flags.MDBX_put_flags_t)
+            
+            guard code != 0, let error = MDBXError(code: code) else {
+              return
+            }
 
-    throw error
+            throw error
+        }
+    }
   }
 }
