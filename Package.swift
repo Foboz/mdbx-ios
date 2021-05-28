@@ -10,7 +10,10 @@ let package = Package(
   products: [
     .library(
       name: "mdbx-ios",
-      targets: ["libmdbx_ios"]),
+      targets: ["mdbx-ios"]),
+    .library(
+      name: "libmdbx_ios",
+      targets: ["libmdbx_ios"])
   ],
   dependencies: [
   ],
@@ -18,6 +21,10 @@ let package = Package(
     .target(
       name: "mdbx-ios",
       dependencies: ["libmdbx_ios"]),
+    .testTarget(
+       name: "mdbx-ios-tests",
+       dependencies: ["mdbx-ios"],
+       path: "Tests/mdbx-ios-tests"),
     .binaryTarget(
       name: "libmdbx_ios",
       url: "https://github.com/Foboz/mdbx-ios/releases/download/1.0.1/libmdbx_ios.xcframework.zip",
