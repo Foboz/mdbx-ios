@@ -27,7 +27,7 @@ let package = Package(
        path: "Tests/mdbx-ios-tests"),
     .binaryTarget(
       name: "libmdbx_ios",
-      url: "https://github.com/Foboz/mdbx-ios/releases/download/1.0.1/libmdbx_ios.xcframework.zip",
-      checksum: "9500b0db7b5090d6b00ab28d72e5a9ba5cdce58a399061e3a30df01249253406")
+      url: "https://github.com/Foboz/mdbx-ios/releases/download/1.0.2/libmdbx_ios.xcframework.zip",
+      checksum: "a3ea2e8d07781690c348ff776bfd3070e925de80c1098848855a772b63c3ef71")
   ]
 )
