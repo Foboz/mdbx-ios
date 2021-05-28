@@ -110,7 +110,7 @@
 		56D3E722261E497A009B3954 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 1250;
 				TargetAttributes = {
 					56D3E72A261E497A009B3954 = {
 						CreatedOnToolsVersion = 12.4;
@@ -303,7 +303,7 @@
 					"'_HAS_EXCEPTIONS=1'",
 					"'MDBX_BUILD_FLAGS_CONFIG=\"-Wno-error=shorten-64-to-32 \"'",
 					"'MDBX_BUILD_TYPE=\"Debug\"'",
-					"'MDBX_CONFIG_H=\"/Users/foboz/Projects/mdbx_one_more/libmdbx/build/config.h\"'",
+					"'MDBX_CONFIG_H=\"$(PROJECT_DIR)/../libmdbx/build/config.h\"'",
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				HEADER_SEARCH_PATHS = (
@@ -354,8 +354,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.myetherwallet.libmdbx-ios";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};
@@ -381,7 +382,7 @@
 					"'_HAS_EXCEPTIONS=1'",
 					"'MDBX_BUILD_FLAGS_CONFIG=\"-Wno-error=shorten-64-to-32 \"'",
 					"'MDBX_BUILD_TYPE=\"Release\"'",
-					"'MDBX_CONFIG_H=\"/Users/foboz/Projects/mdbx_one_more/libmdbx/build/config.h\"'",
+					"'MDBX_CONFIG_H=\"$(PROJECT_DIR)/../libmdbx/build/config.h\"'",
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				HEADER_SEARCH_PATHS = (
@@ -431,8 +432,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.myetherwallet.libmdbx-ios";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Release;
 		};
