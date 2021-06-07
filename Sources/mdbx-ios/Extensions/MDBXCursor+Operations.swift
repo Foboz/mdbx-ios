@@ -107,18 +107,28 @@ public extension MDBXCursor {
     let keyCount = key.count
     var localKey = key
     return try localKey.withUnsafeMutableBytes { keyPointer in
-        var mdbxKey = MDBX_val()
-        mdbxKey.iov_base = keyPointer.baseAddress
-        mdbxKey.iov_len = keyCount
-        var mdbxData = MDBX_val()
-        
-        let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
+      var mdbxKey = MDBX_val()
+      mdbxKey.iov_base = keyPointer.baseAddress
+      mdbxKey.iov_len = keyCount
+      var mdbxData = MDBX_val()
+      
+      let code = mdbx_cursor_get(_cursor, &mdbxKey, &mdbxData, operation.MDBX_cursor_op)
+      let txn = mdbx_cursor_txn(_cursor)
+      
+      if mdbx_is_dirty(txn, mdbxKey.iov_base) == MDBX_RESULT_FALSE.rawValue {
+        key = mdbxKey.dataNoCopy
+      } else {
         key = mdbxKey.data
-        guard code != 0, let error = MDBXError(code: code) else {
+      }
+      
+      guard code != 0, let error = MDBXError(code: code) else {
+        guard mdbx_is_dirty(txn, mdbxData.iov_base) == MDBX_RESULT_FALSE.rawValue else {
           return mdbxData.data
         }
-        
-        throw error
+        return mdbxData.dataNoCopy
+      }
+      
+      throw error
     }
   }
   

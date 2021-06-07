@@ -109,7 +109,7 @@ final class MDBXTests: XCTestCase {
   func testTransactionIsDirty() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
-      var data = Data.some
+      let data = Data.some
       var key = Data.some
 
       try writeData(key: key, value: data, commit: false)
@@ -407,11 +407,12 @@ final class MDBXTests: XCTestCase {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
 
-      var value1 = Data.verySmallInt
-      var value2 = Data.veryLargeInt
+      var value1 = Data.verySmallInt // 0x8000000000000000
+      var value2 = Data.veryLargeInt // 0x7fffffffffffffff
       
+      // value1 > value2
       let result = _transaction!.databaseCompare(a: &value1, b: &value2, database: _table!)
-      XCTAssert(result < 0)
+      XCTAssert(result > 0)
     } catch {
       XCTFail(error.localizedDescription)
     }
@@ -545,7 +546,7 @@ final class MDBXTests: XCTestCase {
   func testTableClear() {
     do {
       try dbOpen_PrepareTransaction_Table_Cursor_ClearTable()
-      var value = Data.some
+      let value = Data.some
       var key = Data.some
       
       try writeData(key: key, value: value)

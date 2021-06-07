@@ -82,14 +82,16 @@ func dbPrepare() -> MDBXEnvironment? {
                                 shrinkThreshold: -1,
                                 pageSize: -1)
     try environment.setHandleSlowReaders { (env, txn, pid, tid, laggard, gap, space, retry) -> Int32 in
-      debugPrint(env ?? "")
-      debugPrint(txn ?? "")
-      debugPrint(pid)
-      debugPrint(tid ?? "")
-      debugPrint(laggard)
-      debugPrint(gap)
-      debugPrint(space)
-      debugPrint(retry)
+      
+      //     debugPrint(env ?? "")
+      //     debugPrint(txn ?? "")
+      //     debugPrint(pid)
+      //     debugPrint(tid ?? "")
+      //     debugPrint(laggard)
+      //     debugPrint(gap)
+      //     debugPrint(space)
+      //     debugPrint(retry)
+      //
       //     rc = mdbx_env_set_hsr(env, testcase::hsr_callback);
       //     if (unlikely(rc != MDBX_SUCCESS))
       //       failure_perror("mdbx_env_set_hsr()", rc);
