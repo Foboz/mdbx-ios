@@ -36,7 +36,7 @@ final class OtherTests: XCTestCase {
   }
   
   func testReadMeasure() {
-    let (txn, db, env) = try! writeSome()
+    let (_, db, env) = try! writeSome()
         
     let readTransaction = MDBXTransaction(env)
     try! beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])
@@ -55,7 +55,7 @@ final class OtherTests: XCTestCase {
   func testWriteAsyncRead() {
     let expectation = XCTestExpectation(description: "Read values in background thread")
 
-    let (txn, db, env) = try! writeSome()
+    let (_, db, env) = try! writeSome()
     DispatchQueue.global().async {
       let readTransaction = MDBXTransaction(env)
       try! beginTransaction(transaction: readTransaction, readonly: true, flags: [.readOnly])

@@ -49,7 +49,10 @@ public extension MDBXTransaction {
         var data: MDBX_val = .init()
         let code = mdbx_get(_txn, database._dbi, &mdbxKey, &data)
         guard code != 0, let error = MDBXError(code: code) else {
-          return data.data
+          guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+            return data.data
+          }
+          return data.dataNoCopy
         }
         
         throw error
@@ -96,9 +99,16 @@ public extension MDBXTransaction {
       var data: MDBX_val = .init()
 
       let code = mdbx_get_equal_or_great(_txn, database._dbi, &mdbxKey, &data)
-      key = mdbxKey.data
+      if mdbx_is_dirty(_txn, mdbxKey.iov_base) == MDBX_RESULT_FALSE.rawValue {
+        key = mdbxKey.dataNoCopy
+      } else {
+        key = mdbxKey.data
+      }
       guard code != 0, let error = MDBXError(code: code) else {
+        guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
           return data.data
+        }
+        return data.dataNoCopy
       }
 
       throw error
@@ -146,9 +156,18 @@ public extension MDBXTransaction {
       var data: MDBX_val = .init()
 
       let code = mdbx_get_ex(_txn, database._dbi, &mdbxKey, &data, &valuesCount)
-      key = mdbxKey.data
+
+      if mdbx_is_dirty(_txn, mdbxKey.iov_base) == MDBX_RESULT_FALSE.rawValue {
+        key = mdbxKey.dataNoCopy
+      } else {
+        key = mdbxKey.data
+      }
+
       guard code != 0, let error = MDBXError(code: code) else {
+        guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
           return data.data
+        }
+        return data.dataNoCopy
       }
 
       throw error
@@ -396,7 +415,10 @@ public extension MDBXTransaction {
         let code = mdbx_replace(_txn, database._dbi, &mdbxKey, &newMdbxValue, &oldMdbxValue, flags.MDBX_put_flags_t)
         
         guard code != 0, let error = MDBXError(code: code) else {
+          guard mdbx_is_dirty(_txn, oldMdbxValue.iov_base) == MDBX_RESULT_FALSE.rawValue else {
             return oldMdbxValue.data
+          }
+          return oldMdbxValue.dataNoCopy
         }
 
         throw error
