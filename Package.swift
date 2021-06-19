@@ -92,15 +92,15 @@ let package = Package(
         .define("MDBX_DEBUG", to: "1", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Debug\"", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Release\"", .when(configuration: .release)),
-        .unsafeFlags([
-          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
-          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-          "-ggdb"
-        ], .when(configuration: .debug)),
-        .unsafeFlags([
-          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
-          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-        ], .when(configuration: .release)),
+//        .unsafeFlags([
+//          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
+//          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
+//          "-ggdb"
+//        ], .when(configuration: .debug)),
+//        .unsafeFlags([
+//          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
+//          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
+//        ], .when(configuration: .release)),
       ],
       cxxSettings: [
         .headerSearchPath("."),
@@ -119,16 +119,16 @@ let package = Package(
         .define("MDBX_DEBUG", to: "1", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Debug\"", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Release\"", .when(configuration: .release)),
-        .unsafeFlags([
-          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
-          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-          "-g"
-        ], .when(configuration: .debug)),
-        .unsafeFlags([
-          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
-          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-DNDEBUG", "-fPIC", "-ffast-math",
-          "-fvisibility=hidden",
-        ], .when(configuration: .release)),
+//        .unsafeFlags([
+//          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
+//          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-fPIC", "-ffast-math", "-fvisibility=hidden",
+//          "-g"
+//        ], .when(configuration: .debug)),
+//        .unsafeFlags([
+//          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
+//          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-DNDEBUG", "-fPIC", "-ffast-math",
+//          "-fvisibility=hidden",
+//        ], .when(configuration: .release)),
       ],
       linkerSettings: [
         .linkedLibrary("c++")
