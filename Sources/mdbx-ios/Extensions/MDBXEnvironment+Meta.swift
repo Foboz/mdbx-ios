@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 public typealias MDBXEnvironmentReaderListHandler<T> = (_ context: T?, _ num: Int32, _ slot: Int32, _ processId: pid_t, _ threadId: pthread_t?, _ txnId: UInt64, _ lag: UInt64, _ bytesUsed: Int, _ bytesRetained: Int) -> Int32
 

@@ -4,6 +4,10 @@
 
 ## Build generated
 build/
+libmdbx/build/**/
+libmdbx/build/*.cmake
+libmdbx/build/*.txt
+!libmdbx/build/
 DerivedData/
 
 ## Various settings

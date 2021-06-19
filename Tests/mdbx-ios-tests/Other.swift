@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import XCTest
 
 @testable import mdbx_ios
@@ -74,6 +75,7 @@ final class OtherTests: XCTestCase {
   }
   
   func testAsyncReadWrite() {
+    let logger = OSLog(subsystem: "mdbx-ios.test.other", category: #function)
     dbDelete()
 
     let numberOfCommits = 200000
@@ -180,16 +182,16 @@ final class OtherTests: XCTestCase {
             }
           }
           if readChecksum == writeChecksum && readCount == numberOfCommits {
-            debugPrint("=============")
-            debugPrint("testAsyncReadWrite 187: successful read on \(attempts) attempt. Total time: \(abs(date.timeIntervalSinceNow)) secs")
-            debugPrint("=============")
+            os_log("=============", log: logger, type: .info)
+            os_log("Successful read on %d attempt. Total time: %lf secs", log: logger, type: .info, attempts, abs(date.timeIntervalSinceNow))
+            os_log("=============", log: logger, type: .info)
             expectation.fulfill()
             break
           } else {
             attempts += 1
           }
         } catch {
-          debugPrint(error.localizedDescription)
+          os_log("Error: %@", log: logger, type: .error, error.localizedDescription)
           attempts += 1
         }
         try? readTransaction.break()

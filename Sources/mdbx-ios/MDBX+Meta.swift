@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 /** \brief The shortcut to calling \ref mdbx_dbi_flags_ex() with `state=NULL`
  * for discarding it result. \ingroup c_statinfo */

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 public extension MDBXTransaction {
   /** \brief Get items from a database.

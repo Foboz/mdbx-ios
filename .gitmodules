@@ -1,6 +1,6 @@
-[submodule "libmdbx"]
-	path = libmdbx
-	url = https://github.com/erthink/libmdbx.git
 [submodule "ios-cmake"]
 	path = ios-cmake
 	url = https://github.com/leetal/ios-cmake.git
+[submodule "libmdbx/libmdbx"]
+	path = libmdbx/libmdbx
+	url = https://github.com/erthink/libmdbx.git
