@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 /**
  * Opaque structure for a transaction handle.

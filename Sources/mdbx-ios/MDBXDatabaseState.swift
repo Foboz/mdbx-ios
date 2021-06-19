@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 public struct MDBXDatabseState: OptionSet {
   public let rawValue: UInt32
@@ -30,6 +30,6 @@ public struct MDBXDatabseState: OptionSet {
 
 internal extension MDBXDatabseState {
   var MDBX_dbi_state_t: MDBX_dbi_state_t {
-    return libmdbx_ios.MDBX_dbi_state_t(rawValue)
+    return libmdbx.MDBX_dbi_state_t(rawValue)
   }
 }

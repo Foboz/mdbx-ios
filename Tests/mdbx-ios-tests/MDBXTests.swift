@@ -118,6 +118,7 @@ final class MDBXTests: XCTestCase {
       try _transaction!.commit()
       try beginTransaction(transaction: _transaction!)
       result = try _transaction!.isDirty(data: &key)
+      try _transaction!.abort()
       XCTAssertTrue(result)
     } catch {
       XCTFail(error.localizedDescription)
@@ -793,7 +794,7 @@ final class MDBXTests: XCTestCase {
   
   func testReverseUniqueAppend() {
     do {
-      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 500000)
+      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 1_000_000)
     } catch {
       XCTFail(error.localizedDescription)
     }

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 public extension MDBXCursor {
   /** \brief Return count of duplicates for current key.

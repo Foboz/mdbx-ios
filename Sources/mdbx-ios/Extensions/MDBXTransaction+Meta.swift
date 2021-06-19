@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 public extension MDBXTransaction {
   /** \brief Determines whether the given address is on a dirty database page of

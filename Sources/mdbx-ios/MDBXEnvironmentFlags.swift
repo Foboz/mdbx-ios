@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 /**
  * Environment flags
@@ -26,7 +26,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
   /**
    * - Tag: MDBXEnvironmentFlags.envDefauls
    */
-  public static let envDefaults = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_ENV_DEFAULTS.rawValue)
+  public static let envDefaults = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_ENV_DEFAULTS.rawValue)
   /**
    * No environment directory.
    *
@@ -47,7 +47,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.noSubDir
    */
-  public static let noSubDir = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_NOSUBDIR.rawValue)
+  public static let noSubDir = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_NOSUBDIR.rawValue)
   
   /**
    * Read only mode.
@@ -68,7 +68,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.readOnly
    */
-  public static let readOnly = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_RDONLY.rawValue)
+  public static let readOnly = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_RDONLY.rawValue)
   
   /**
    * Open environment in exclusive/monopolistic mode.
@@ -95,7 +95,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.exclusive
    */
-  public static let exclusive = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_EXCLUSIVE.rawValue)
+  public static let exclusive = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_EXCLUSIVE.rawValue)
   
   /**
    * Using database/environment which already opened by another process(es).
@@ -115,7 +115,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.accede
    */
-  public static let accede = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_ACCEDE.rawValue)
+  public static let accede = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_ACCEDE.rawValue)
   
   /**
    * Map data into memory with write permission.
@@ -145,7 +145,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.writeMap
    */
-  public static let writeMap = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_WRITEMAP.rawValue)
+  public static let writeMap = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_WRITEMAP.rawValue)
   
   /**
    * Tie reader locktable slots to read-only transactions instead of to threads.
@@ -166,7 +166,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.noTLS
    */
-  public static let noTLS = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_NOTLS.rawValue)
+  public static let noTLS = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_NOTLS.rawValue)
   
   /**
    * Don't do readahead.
@@ -186,7 +186,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.noReadAhead
    */
-  public static let noReadAhead = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_NORDAHEAD.rawValue)
+  public static let noReadAhead = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_NORDAHEAD.rawValue)
   
   /**
    * Don't initialize malloc'ed memory before writing to datafile.
@@ -206,7 +206,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.noMemoryInit
    */
-  public static let noMemoryInit = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_NOMEMINIT.rawValue)
+  public static let noMemoryInit = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_NOMEMINIT.rawValue)
   
   /**
    * Aims to coalesce a Garbage Collection items.
@@ -220,7 +220,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * - Tag: MDBXEnvironmentFlags.coalesce
    */
-  public static let coalesce = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_COALESCE.rawValue)
+  public static let coalesce = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_COALESCE.rawValue)
   
   /**
    * LIFO policy for recycling a Garbage Collection items.
@@ -242,14 +242,14 @@ public struct MDBXEnvironmentFlags: OptionSet {
    * This flag may be changed at any time using `mdbx_env_set_flags()`.
    * - Tag: MDBXEnvironmentFlags.lifoReclaim
    */
-  public static let lifoReclaim = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_LIFORECLAIM.rawValue)
+  public static let lifoReclaim = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_LIFORECLAIM.rawValue)
   
   /**
    * Debugging option, fill/perturb released pages.
    *
    * - Tag: MDBXEnvironmentFlags.pagePerturb
    */
-  public static let pagePerturb = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_PAGEPERTURB.rawValue)
+  public static let pagePerturb = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_PAGEPERTURB.rawValue)
 }
 
 
@@ -310,7 +310,7 @@ extension MDBXEnvironmentFlags: MDBXEnvironmentFlagsSyncModes {
    *
    * - Tag: MDBXEnvironmentFlags.syncDurable
    */
-  public static let syncDurable = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_SYNC_DURABLE.rawValue)
+  public static let syncDurable = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_SYNC_DURABLE.rawValue)
   
   /**
    * Don't sync the meta-page after commit.
@@ -331,7 +331,7 @@ extension MDBXEnvironmentFlags: MDBXEnvironmentFlagsSyncModes {
    *
    * - Tag: MDBXEnvironmentFlags.noMetaSync
    */
-  public static let noMetaSync = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_NOMETASYNC.rawValue)
+  public static let noMetaSync = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_NOMETASYNC.rawValue)
   
   /**
    * Don't sync anything but keep previous steady commits.
@@ -378,7 +378,7 @@ extension MDBXEnvironmentFlags: MDBXEnvironmentFlagsSyncModes {
    *
    * - Tag: MDBXEnvironmentFlags.safeNoSync
    */
-  public static let safeNoSync = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_SAFE_NOSYNC.rawValue)
+  public static let safeNoSync = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_SAFE_NOSYNC.rawValue)
   
   /**
    * Don't sync anything and wipe previous steady commits.
@@ -414,11 +414,11 @@ extension MDBXEnvironmentFlags: MDBXEnvironmentFlagsSyncModes {
    *
    * - Tag: MDBXEnvironmentFlags.utterlyNoSync
    */
-  public static let utterlyNoSync = MDBXEnvironmentFlags(rawValue: libmdbx_ios.MDBX_UTTERLY_NOSYNC.rawValue)
+  public static let utterlyNoSync = MDBXEnvironmentFlags(rawValue: libmdbx.MDBX_UTTERLY_NOSYNC.rawValue)
 }
 
 internal extension MDBXEnvironmentFlags {
   var MDBX_env_flags_t: MDBX_env_flags_t {
-    libmdbx_ios.MDBX_env_flags_t(self.rawValue)
+    libmdbx.MDBX_env_flags_t(self.rawValue)
   }
 }
