@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+import OSLog
 
 @testable import mdbx_ios
 
@@ -50,11 +51,12 @@ func prepareCursor(transaction: MDBXTransaction, database: MDBXDatabase) throws 
 }
 
 func dbOpen(environment: MDBXEnvironment) {
+  let logger = OSLog(subsystem: "mdbx-ios.test.helpers", category: #function)
   do {
     let path = FileManager.default.temporaryDirectory.appendingPathComponent(Static.dbName).path
-    debugPrint("================")
-    debugPrint("DB PATH: \(path)")
-    debugPrint("================")
+    os_log("=============", log: logger, type: .info)
+    os_log("DB PATH: %@", log: logger, type: .info, path)
+    os_log("=============", log: logger, type: .info)
     try environment.open(path: path, flags: .envDefaults, mode: .iOSPermission)
   } catch {
     XCTFail(error.localizedDescription)

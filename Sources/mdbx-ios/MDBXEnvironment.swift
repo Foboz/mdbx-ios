@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 /**
  * Opaque structure for a database environment.
@@ -520,6 +520,55 @@ public class MDBXEnvironment {
     } else {
       code = mdbx_env_set_hsr(self._env, nil)
     }
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Registers the current thread as a reader for the environment.
+   * \ingroup c_extra
+   *
+   * To perform read operations without blocking, a reader slot must be assigned
+   * for each thread. However, this assignment requires a short-term lock
+   * acquisition which is performed automatically. This function allows you to
+   * assign the reader slot in advance and thus avoid capturing the blocker when
+   * the read transaction starts firstly from current thread.
+   * \see mdbx_thread_unregister()
+   *
+   * \note Threads are registered automatically the first time a read transaction
+   *       starts. Therefore, there is no need to use this function, except in
+   *       special cases.
+   *
+   * \param [in] env   An environment handle returned by \ref mdbx_env_create().
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   * or \ref MDBX_RESULT_TRUE if thread is already registered. */
+  public func register() throws {
+    guard self._state == .opened else { return }
+    
+    let code = mdbx_thread_register(self._env)
+    
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Unregisters the current thread as a reader for the environment.
+   * \ingroup c_extra
+   *
+   * To perform read operations without blocking, a reader slot must be assigned
+   * for each thread. However, the assigned reader slot will remain occupied until
+   * the thread ends or the environment closes. This function allows you to
+   * explicitly release the assigned reader slot.
+   * \see mdbx_thread_register()
+   *
+   * \param [in] env   An environment handle returned by \ref mdbx_env_create().
+   *
+   * \returns A non-zero error value on failure and 0 on success, or
+   * \ref MDBX_RESULT_TRUE if thread is not registered or already unregistered. */
+  public func unregister() throws {
+    guard self._state == .opened else { return }
+    
+    let code = mdbx_thread_unregister(self._env)
+    
     guard code != 0, let error = MDBXError(code: code) else { return }
     throw error
   }

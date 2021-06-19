@@ -6,54 +6,54 @@
 //
 
 import Foundation
-import libmdbx_ios
+import libmdbx
 
 enum MDBXError: LocalizedError {
   init?(code: Int32) {
     switch code {
-    case libmdbx_ios.MDBX_KEYEXIST.rawValue:                  self = .keyExist
-    case libmdbx_ios.MDBX_FIRST_LMDB_ERRCODE.rawValue:        self = .firstLMDBErrorCode
-    case libmdbx_ios.MDBX_NOTFOUND.rawValue:                  self = .notFound
-    case libmdbx_ios.MDBX_PAGE_NOTFOUND.rawValue:             self = .pageNotFound
-    case libmdbx_ios.MDBX_CORRUPTED.rawValue:                 self = .corrupted
-    case libmdbx_ios.MDBX_PANIC.rawValue:                     self = .panic
-    case libmdbx_ios.MDBX_VERSION_MISMATCH.rawValue:          self = .versionMismatch
-    case libmdbx_ios.MDBX_INVALID.rawValue:                   self = .invalid
-    case libmdbx_ios.MDBX_MAP_FULL.rawValue:                  self = .mapFull
-    case libmdbx_ios.MDBX_DBS_FULL.rawValue:                  self = .dbsFull
-    case libmdbx_ios.MDBX_READERS_FULL.rawValue:              self = .readersFull
-    case libmdbx_ios.MDBX_TXN_FULL.rawValue:                  self = .txnFull
-    case libmdbx_ios.MDBX_CURSOR_FULL.rawValue:               self = .cursorFull
-    case libmdbx_ios.MDBX_PAGE_FULL.rawValue:                 self = .pageFull
-    case libmdbx_ios.MDBX_UNABLE_EXTEND_MAPSIZE.rawValue:     self = .unableExtendMapsize
-    case libmdbx_ios.MDBX_INCOMPATIBLE.rawValue:              self = .incompatible
-    case libmdbx_ios.MDBX_BAD_RSLOT.rawValue:                 self = .badReadSlot
-    case libmdbx_ios.MDBX_BAD_TXN.rawValue:                   self = .badTransaction
-    case libmdbx_ios.MDBX_BAD_VALSIZE.rawValue:               self = .badValSize
-    case libmdbx_ios.MDBX_BAD_DBI.rawValue:                   self = .badDatabase
-    case libmdbx_ios.MDBX_PROBLEM.rawValue:                   self = .problem
-    case libmdbx_ios.MDBX_LAST_LMDB_ERRCODE.rawValue:         self = .lastLMDBErrorCode
-    case libmdbx_ios.MDBX_BUSY.rawValue:                      self = .busy
-    case libmdbx_ios.MDBX_FIRST_ADDED_ERRCODE.rawValue:       self = .firstAddedErrorCode
-    case libmdbx_ios.MDBX_EMULTIVAL.rawValue:                 self = .multipleValues
-    case libmdbx_ios.MDBX_EBADSIGN.rawValue:                  self = .badSignature
-    case libmdbx_ios.MDBX_WANNA_RECOVERY.rawValue:            self = .wannaRecovery
-    case libmdbx_ios.MDBX_EKEYMISMATCH.rawValue:              self = .keyMismatch
-    case libmdbx_ios.MDBX_TOO_LARGE.rawValue:                 self = .tooLarge
-    case libmdbx_ios.MDBX_THREAD_MISMATCH.rawValue:           self = .threadMismatch
-    case libmdbx_ios.MDBX_TXN_OVERLAPPING.rawValue:           self = .transactionsOverlapping
-    case libmdbx_ios.MDBX_LAST_ADDED_ERRCODE.rawValue:        self = .lastAddedErrorCode
-    case libmdbx_ios.MDBX_ENODATA.rawValue:                   self = .ENODATA
-    case libmdbx_ios.MDBX_EINVAL.rawValue:                    self = .EINVAL
-    case libmdbx_ios.MDBX_EACCESS.rawValue:                   self = .EACCESS
-    case libmdbx_ios.MDBX_ENOMEM.rawValue:                    self = .ENOMEM
-    case libmdbx_ios.MDBX_EROFS.rawValue:                     self = .EROFS
-    case libmdbx_ios.MDBX_ENOSYS.rawValue:                    self = .ENOSYS
-    case libmdbx_ios.MDBX_EIO.rawValue:                       self = .EIO
-    case libmdbx_ios.MDBX_EPERM.rawValue:                     self = .EPERM
-    case libmdbx_ios.MDBX_EINTR.rawValue:                     self = .EINTR
-    case libmdbx_ios.MDBX_ENOFILE.rawValue:                   self = .ENOFILE
-    case libmdbx_ios.MDBX_EREMOTE.rawValue:                   self = .EREMOTE
+    case libmdbx.MDBX_KEYEXIST.rawValue:                  self = .keyExist
+    case libmdbx.MDBX_FIRST_LMDB_ERRCODE.rawValue:        self = .firstLMDBErrorCode
+    case libmdbx.MDBX_NOTFOUND.rawValue:                  self = .notFound
+    case libmdbx.MDBX_PAGE_NOTFOUND.rawValue:             self = .pageNotFound
+    case libmdbx.MDBX_CORRUPTED.rawValue:                 self = .corrupted
+    case libmdbx.MDBX_PANIC.rawValue:                     self = .panic
+    case libmdbx.MDBX_VERSION_MISMATCH.rawValue:          self = .versionMismatch
+    case libmdbx.MDBX_INVALID.rawValue:                   self = .invalid
+    case libmdbx.MDBX_MAP_FULL.rawValue:                  self = .mapFull
+    case libmdbx.MDBX_DBS_FULL.rawValue:                  self = .dbsFull
+    case libmdbx.MDBX_READERS_FULL.rawValue:              self = .readersFull
+    case libmdbx.MDBX_TXN_FULL.rawValue:                  self = .txnFull
+    case libmdbx.MDBX_CURSOR_FULL.rawValue:               self = .cursorFull
+    case libmdbx.MDBX_PAGE_FULL.rawValue:                 self = .pageFull
+    case libmdbx.MDBX_UNABLE_EXTEND_MAPSIZE.rawValue:     self = .unableExtendMapsize
+    case libmdbx.MDBX_INCOMPATIBLE.rawValue:              self = .incompatible
+    case libmdbx.MDBX_BAD_RSLOT.rawValue:                 self = .badReadSlot
+    case libmdbx.MDBX_BAD_TXN.rawValue:                   self = .badTransaction
+    case libmdbx.MDBX_BAD_VALSIZE.rawValue:               self = .badValSize
+    case libmdbx.MDBX_BAD_DBI.rawValue:                   self = .badDatabase
+    case libmdbx.MDBX_PROBLEM.rawValue:                   self = .problem
+    case libmdbx.MDBX_LAST_LMDB_ERRCODE.rawValue:         self = .lastLMDBErrorCode
+    case libmdbx.MDBX_BUSY.rawValue:                      self = .busy
+    case libmdbx.MDBX_FIRST_ADDED_ERRCODE.rawValue:       self = .firstAddedErrorCode
+    case libmdbx.MDBX_EMULTIVAL.rawValue:                 self = .multipleValues
+    case libmdbx.MDBX_EBADSIGN.rawValue:                  self = .badSignature
+    case libmdbx.MDBX_WANNA_RECOVERY.rawValue:            self = .wannaRecovery
+    case libmdbx.MDBX_EKEYMISMATCH.rawValue:              self = .keyMismatch
+    case libmdbx.MDBX_TOO_LARGE.rawValue:                 self = .tooLarge
+    case libmdbx.MDBX_THREAD_MISMATCH.rawValue:           self = .threadMismatch
+    case libmdbx.MDBX_TXN_OVERLAPPING.rawValue:           self = .transactionsOverlapping
+    case libmdbx.MDBX_LAST_ADDED_ERRCODE.rawValue:        self = .lastAddedErrorCode
+    case libmdbx.MDBX_ENODATA.rawValue:                   self = .ENODATA
+    case libmdbx.MDBX_EINVAL.rawValue:                    self = .EINVAL
+    case libmdbx.MDBX_EACCESS.rawValue:                   self = .EACCESS
+    case libmdbx.MDBX_ENOMEM.rawValue:                    self = .ENOMEM
+    case libmdbx.MDBX_EROFS.rawValue:                     self = .EROFS
+    case libmdbx.MDBX_ENOSYS.rawValue:                    self = .ENOSYS
+    case libmdbx.MDBX_EIO.rawValue:                       self = .EIO
+    case libmdbx.MDBX_EPERM.rawValue:                     self = .EPERM
+    case libmdbx.MDBX_EINTR.rawValue:                     self = .EINTR
+    case libmdbx.MDBX_ENOFILE.rawValue:                   self = .ENOFILE
+    case libmdbx.MDBX_EREMOTE.rawValue:                   self = .EREMOTE
     default: return nil
     }
   }
@@ -223,52 +223,52 @@ enum MDBXError: LocalizedError {
   
   var code: Int32 {
     switch self {
-    case .keyExist:                 return libmdbx_ios.MDBX_KEYEXIST.rawValue
-    case .firstLMDBErrorCode:       return libmdbx_ios.MDBX_FIRST_LMDB_ERRCODE.rawValue
-    case .notFound:                 return libmdbx_ios.MDBX_NOTFOUND.rawValue
-    case .pageNotFound:             return libmdbx_ios.MDBX_PAGE_NOTFOUND.rawValue
-    case .corrupted:                return libmdbx_ios.MDBX_CORRUPTED.rawValue
-    case .panic:                    return libmdbx_ios.MDBX_PANIC.rawValue
-    case .versionMismatch:          return libmdbx_ios.MDBX_VERSION_MISMATCH.rawValue
-    case .invalid:                  return libmdbx_ios.MDBX_INVALID.rawValue
-    case .mapFull:                  return libmdbx_ios.MDBX_MAP_FULL.rawValue
-    case .dbsFull:                  return libmdbx_ios.MDBX_DBS_FULL.rawValue
-    case .readersFull:              return libmdbx_ios.MDBX_READERS_FULL.rawValue
-    case .txnFull:                  return libmdbx_ios.MDBX_TXN_FULL.rawValue
-    case .cursorFull:               return libmdbx_ios.MDBX_CURSOR_FULL.rawValue
-    case .pageFull:                 return libmdbx_ios.MDBX_PAGE_FULL.rawValue
-    case .unableExtendMapsize:      return libmdbx_ios.MDBX_UNABLE_EXTEND_MAPSIZE.rawValue
-    case .incompatible:             return libmdbx_ios.MDBX_INCOMPATIBLE.rawValue
-    case .badReadSlot:              return libmdbx_ios.MDBX_BAD_RSLOT.rawValue
-    case .badTransaction:           return libmdbx_ios.MDBX_BAD_TXN.rawValue
-    case .badValSize:               return libmdbx_ios.MDBX_BAD_VALSIZE.rawValue
-    case .badDatabase:              return libmdbx_ios.MDBX_BAD_DBI.rawValue
-    case .problem:                  return libmdbx_ios.MDBX_PROBLEM.rawValue
-    case .lastLMDBErrorCode:        return libmdbx_ios.MDBX_LAST_LMDB_ERRCODE.rawValue
-    case .busy:                     return libmdbx_ios.MDBX_BUSY.rawValue
-    case .firstAddedErrorCode:      return libmdbx_ios.MDBX_FIRST_ADDED_ERRCODE.rawValue
-    case .multipleValues:           return libmdbx_ios.MDBX_EMULTIVAL.rawValue
-    case .badSignature:             return libmdbx_ios.MDBX_EBADSIGN.rawValue
-    case .wannaRecovery:            return libmdbx_ios.MDBX_WANNA_RECOVERY.rawValue
-    case .keyMismatch:              return libmdbx_ios.MDBX_EKEYMISMATCH.rawValue
-    case .tooLarge:                 return libmdbx_ios.MDBX_TOO_LARGE.rawValue
-    case .threadMismatch:           return libmdbx_ios.MDBX_THREAD_MISMATCH.rawValue
-    case .transactionsOverlapping:  return libmdbx_ios.MDBX_TXN_OVERLAPPING.rawValue
-    case .lastAddedErrorCode:       return libmdbx_ios.MDBX_LAST_ADDED_ERRCODE.rawValue
+    case .keyExist:                 return libmdbx.MDBX_KEYEXIST.rawValue
+    case .firstLMDBErrorCode:       return libmdbx.MDBX_FIRST_LMDB_ERRCODE.rawValue
+    case .notFound:                 return libmdbx.MDBX_NOTFOUND.rawValue
+    case .pageNotFound:             return libmdbx.MDBX_PAGE_NOTFOUND.rawValue
+    case .corrupted:                return libmdbx.MDBX_CORRUPTED.rawValue
+    case .panic:                    return libmdbx.MDBX_PANIC.rawValue
+    case .versionMismatch:          return libmdbx.MDBX_VERSION_MISMATCH.rawValue
+    case .invalid:                  return libmdbx.MDBX_INVALID.rawValue
+    case .mapFull:                  return libmdbx.MDBX_MAP_FULL.rawValue
+    case .dbsFull:                  return libmdbx.MDBX_DBS_FULL.rawValue
+    case .readersFull:              return libmdbx.MDBX_READERS_FULL.rawValue
+    case .txnFull:                  return libmdbx.MDBX_TXN_FULL.rawValue
+    case .cursorFull:               return libmdbx.MDBX_CURSOR_FULL.rawValue
+    case .pageFull:                 return libmdbx.MDBX_PAGE_FULL.rawValue
+    case .unableExtendMapsize:      return libmdbx.MDBX_UNABLE_EXTEND_MAPSIZE.rawValue
+    case .incompatible:             return libmdbx.MDBX_INCOMPATIBLE.rawValue
+    case .badReadSlot:              return libmdbx.MDBX_BAD_RSLOT.rawValue
+    case .badTransaction:           return libmdbx.MDBX_BAD_TXN.rawValue
+    case .badValSize:               return libmdbx.MDBX_BAD_VALSIZE.rawValue
+    case .badDatabase:              return libmdbx.MDBX_BAD_DBI.rawValue
+    case .problem:                  return libmdbx.MDBX_PROBLEM.rawValue
+    case .lastLMDBErrorCode:        return libmdbx.MDBX_LAST_LMDB_ERRCODE.rawValue
+    case .busy:                     return libmdbx.MDBX_BUSY.rawValue
+    case .firstAddedErrorCode:      return libmdbx.MDBX_FIRST_ADDED_ERRCODE.rawValue
+    case .multipleValues:           return libmdbx.MDBX_EMULTIVAL.rawValue
+    case .badSignature:             return libmdbx.MDBX_EBADSIGN.rawValue
+    case .wannaRecovery:            return libmdbx.MDBX_WANNA_RECOVERY.rawValue
+    case .keyMismatch:              return libmdbx.MDBX_EKEYMISMATCH.rawValue
+    case .tooLarge:                 return libmdbx.MDBX_TOO_LARGE.rawValue
+    case .threadMismatch:           return libmdbx.MDBX_THREAD_MISMATCH.rawValue
+    case .transactionsOverlapping:  return libmdbx.MDBX_TXN_OVERLAPPING.rawValue
+    case .lastAddedErrorCode:       return libmdbx.MDBX_LAST_ADDED_ERRCODE.rawValue
     case .notCreated:               return -30414
     case .alreadyOpened:            return -30413
     case .alreadyCreated:           return -30412
-    case .ENODATA:                  return libmdbx_ios.MDBX_ENODATA.rawValue
-    case .EINVAL:                   return libmdbx_ios.MDBX_EINVAL.rawValue
-    case .EACCESS:                  return libmdbx_ios.MDBX_EACCESS.rawValue
-    case .ENOMEM:                   return libmdbx_ios.MDBX_ENOMEM.rawValue
-    case .EROFS:                    return libmdbx_ios.MDBX_EROFS.rawValue
-    case .ENOSYS:                   return libmdbx_ios.MDBX_ENOSYS.rawValue
-    case .EIO:                      return libmdbx_ios.MDBX_EIO.rawValue
-    case .EPERM:                    return libmdbx_ios.MDBX_EPERM.rawValue
-    case .EINTR:                    return libmdbx_ios.MDBX_EINTR.rawValue
-    case .ENOFILE:                  return libmdbx_ios.MDBX_ENOFILE.rawValue
-    case .EREMOTE:                  return libmdbx_ios.MDBX_EREMOTE.rawValue
+    case .ENODATA:                  return libmdbx.MDBX_ENODATA.rawValue
+    case .EINVAL:                   return libmdbx.MDBX_EINVAL.rawValue
+    case .EACCESS:                  return libmdbx.MDBX_EACCESS.rawValue
+    case .ENOMEM:                   return libmdbx.MDBX_ENOMEM.rawValue
+    case .EROFS:                    return libmdbx.MDBX_EROFS.rawValue
+    case .ENOSYS:                   return libmdbx.MDBX_ENOSYS.rawValue
+    case .EIO:                      return libmdbx.MDBX_EIO.rawValue
+    case .EPERM:                    return libmdbx.MDBX_EPERM.rawValue
+    case .EINTR:                    return libmdbx.MDBX_EINTR.rawValue
+    case .ENOFILE:                  return libmdbx.MDBX_ENOFILE.rawValue
+    case .EREMOTE:                  return libmdbx.MDBX_EREMOTE.rawValue
     }
   }
   
