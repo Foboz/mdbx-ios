@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import OSLog
 @testable import mdbx_ios
 
 private enum Cursors: Int {
@@ -781,46 +782,50 @@ final class MDBXTests: XCTestCase {
   
   // MARK: Append
   func testNonreverseUniqueAppend() {
+    let logger = OSLog(subsystem: "mdbx-ios.test.tests", category: #function)
     do {
       let date = Date()
-      try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 500000)
-      debugPrint("================")
-      print("time: \(abs(date.timeIntervalSinceNow))")
-      debugPrint("================")
+      try batchWritingAndReading(reverse: false, duplicates: false, maxOps: 500000, logger: logger)
+      os_log("=============", log: logger, type: .info)
+      os_log("time: %lf", log: logger, type: .info, abs(date.timeIntervalSinceNow))
+      os_log("=============", log: logger, type: .info)
     } catch {
       XCTFail(error.localizedDescription)
     }
   }
   
   func testReverseUniqueAppend() {
+    let logger = OSLog(subsystem: "mdbx-ios.test.tests", category: #function)
     do {
-      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 1_000_000)
+      try batchWritingAndReading(reverse: true, duplicates: false, maxOps: 1_000_000, logger: logger)
     } catch {
       XCTFail(error.localizedDescription)
     }
   }
   
   func testNonreverseNonuniqueAppend() {
+    let logger = OSLog(subsystem: "mdbx-ios.test.tests", category: #function)
     do {
-      try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 500000)
+      try batchWritingAndReading(reverse: false, duplicates: true, maxOps: 500000, logger: logger)
     } catch {
       XCTFail(error.localizedDescription)
     }
   }
   
   func testReverseNonuniqueAppend() {
+    let logger = OSLog(subsystem: "mdbx-ios.test.tests", category: #function)
     do {
-      try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 500000)
+      try batchWritingAndReading(reverse: true, duplicates: true, maxOps: 500000, logger: logger)
     } catch {
       XCTFail(error.localizedDescription)
     }
   }
   
-  private func batchWritingAndReading(reverse: Bool, duplicates: Bool, maxOps: Int, batchWrite: Int = 42) throws {
+  private func batchWritingAndReading(reverse: Bool, duplicates: Bool, maxOps: Int, batchWrite: Int = 42, logger: OSLog = .default) throws {
     let caption = reverse ? "ahead" : "append"
-    debugPrint("================")
-    debugPrint("the \(caption) scenario selected. Duplicates enabled: \(duplicates)")
-    debugPrint("================")
+    os_log("=============", log: logger, type: .info)
+    os_log("the %@ scenario selected. Duplicates enabled: %@", log: logger, type: .info, caption, duplicates ? "true" : "false")
+    os_log("=============", log: logger, type: .info)
     
     if duplicates {
       try dbOpen_PrepareTransaction_MultiTable_Cursor()
