@@ -1,8 +1,9 @@
 //
-//  File.swift
-//  
+//  MDBXEnvironment.swift
+//  mdbx-ios
 //
 //  Created by Mikhail Nikanorov on 4/7/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import Foundation
