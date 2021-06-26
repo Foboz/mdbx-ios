@@ -1,14 +1,15 @@
 //
-//  File 2.swift
-//  
+//  MDBXError.swift
+//  mdbx-ios
 //
 //  Created by Mikhail Nikanorov on 4/7/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import Foundation
 import libmdbx
 
-enum MDBXError: LocalizedError {
+public enum MDBXError: LocalizedError {
   init?(code: Int32) {
     switch code {
     case libmdbx.MDBX_KEYEXIST.rawValue:                  self = .keyExist
@@ -221,7 +222,7 @@ enum MDBXError: LocalizedError {
   case ENOFILE
   case EREMOTE
   
-  var code: Int32 {
+  public var code: Int32 {
     switch self {
     case .keyExist:                 return libmdbx.MDBX_KEYEXIST.rawValue
     case .firstLMDBErrorCode:       return libmdbx.MDBX_FIRST_LMDB_ERRCODE.rawValue
@@ -272,7 +273,7 @@ enum MDBXError: LocalizedError {
     }
   }
   
-  var errorDescription: String? {
+  public var errorDescription: String? {
     return String(cString: mdbx_strerror(self.code))
   }
 }
