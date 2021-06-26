@@ -13,7 +13,7 @@ import libmdbx
  * Environment flags
  *
  * # Reference
- *    - [open()](x-source-tag://[MDBXEnvironment.open])
+ *    - [open(path:flags:mode:)](x-source-tag://[MDBXEnvironment.open])
  *    - mdbx_env_set_flags()
  *
  * - Tag: MDBXEnvironmentFlags
@@ -101,7 +101,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
   /**
    * Using database/environment which already opened by another process(es).
    *
-   * The [accede](x-source-tag://[MDBXEnvironmentFlags.accede]) flag is useful to avoid \ref MDBX_INCOMPATIBLE error
+   * The [accede](x-source-tag://[MDBXEnvironmentFlags.accede]) flag is useful to avoid [incompatible](x-source-tag://[MDBXError.incompatible]) error
    * while opening the database/environment which is already used by another process(es) with unknown mode/flags. In such cases, if there is a
    * difference in the specified flags ([noMetaSync](x-source-tag://[MDBXEnvironmentFlags.noMetaSync]),
    * [safeNoSync](x-source-tag://[MDBXEnvironmentFlags.safeNoSync]),
@@ -151,8 +151,8 @@ public struct MDBXEnvironmentFlags: OptionSet {
   /**
    * Tie reader locktable slots to read-only transactions instead of to threads.
    *
-   * Don't use Thread-Local Storage, instead tie reader locktable slots to \ref MDBX_txn objects instead of to threads. So, \ref mdbx_txn_reset()
-   * keeps the slot reserved for the \ref MDBX_txn object. A thread may use parallel read-only transactions. And a read-only transaction may span
+   * Don't use Thread-Local Storage, instead tie reader locktable slots to [MDBX_txn](x-source-tag://[MDBX_txn]) objects instead of to threads. So, \ref mdbx_txn_reset()
+   * keeps the slot reserved for the [MDBX_txn](x-source-tag://[MDBX_txn]) object. A thread may use parallel read-only transactions. And a read-only transaction may span
    * threads if you synchronizes its use.
    *
    * Applications that multiplex many user threads over individual OS threads need this option. Such an application must also serialize the write
@@ -160,7 +160,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    *
    * # Note:
    * Regardless to [noTLS](x-source-tag://[MDBXEnvironmentFlags.noTLS]) flag a write transaction entirely should
-   * always be used in one thread from start to finish. MDBX checks this in a reasonable manner and return the \ref MDBX_THREAD_MISMATCH error in rules
+   * always be used in one thread from start to finish. MDBX checks this in a reasonable manner and return the [threadMismatch](x-source-tag://[MDBXError.threadMismatch]) error in rules
    * violation.
    *
    * This flag affects only at environment opening but can't be changed after.
@@ -180,7 +180,7 @@ public struct MDBXEnvironmentFlags: OptionSet {
    * availability, since it changes independently and asynchronously.
    *
    * # Note:
-   * The mdbx_is_readahead_reasonable() function allows to quickly find out whether to use readahead or not based on the size of the data and the
+   * The `mdbx_is_readahead_reasonable()` function allows to quickly find out whether to use readahead or not based on the size of the data and the
    * amount of available memory.
    *
    * This flag affects only at environment opening and can't be changed after.
