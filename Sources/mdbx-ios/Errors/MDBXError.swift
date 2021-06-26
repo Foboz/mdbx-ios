@@ -1,14 +1,15 @@
 //
-//  File 2.swift
-//  
+//  MDBXError.swift
+//  mdbx-ios
 //
 //  Created by Mikhail Nikanorov on 4/7/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import Foundation
 import libmdbx
 
-enum MDBXError: LocalizedError {
+public enum MDBXError: LocalizedError {
   init?(code: Int32) {
     switch code {
     case libmdbx.MDBX_KEYEXIST.rawValue:                  self = .keyExist
@@ -60,58 +61,86 @@ enum MDBXError: LocalizedError {
   
   /**
    * key/data pair already exists
+   *
+   * - Tag: MDBXError.keyExist
    */
   case keyExist
   /**
    *  The first LMDB-compatible defined error code
+   *
+   * - Tag: MDBXError.firstLMDBErrorCode
    */
   case firstLMDBErrorCode
   /**
    * key/data pair not found (EOF)
+   *
+   * - Tag: MDBXError.notFound
    */
   case notFound
   /**
    * Requested page not found - this usually indicates corruption
+   *
+   * - Tag: MDBXError.pageNotFound
    */
   case pageNotFound
   /**
    * Database is corrupted (page was wrong type and so on)
+   *
+   * - Tag: MDBXError.corrupted
    */
   case corrupted
   /**
    * Environment had fatal error, i.e. update of meta page failed and so on.
+   *
+   * - Tag: MDBXError.panic
    */
   case panic
   /**
    * DB file version mismatch with libmdbx
+   *
+   * - Tag: MDBXError.versionMismatch
    */
   case versionMismatch
   /**
    * File is not a valid MDBX file
+   *
+   * - Tag: MDBXError.invalid
    */
   case invalid
   /**
    * Environment mapsize reached
+   *
+   * - Tag: MDBXError.mapFull
    */
   case mapFull
   /**
    * Environment maxdbs reached
+   *
+   * - Tag: MDBXError.dbsFull
    */
   case dbsFull
   /**
    * Environment maxreaders reached
+   *
+   * - Tag: MDBXError.readersFull
    */
   case readersFull
   /**
    * Transaction has too many dirty pages, i.e transaction too big
+   *
+   * - Tag: MDBXError.txnFull
    */
   case txnFull
   /**
    * Cursor stack too deep - this usually indicates corruption, i.e branch-pages loop
+   *
+   * - Tag: MDBXError.cursorFull
    */
   case cursorFull
   /**
    * Page has not enough space - internal error
+   *
+   * - Tag: MDBXError.pageFull
    */
   case pageFull
   /**
@@ -119,50 +148,73 @@ enum MDBXError: LocalizedError {
    *
    * - Database size extended by other process beyond to environment mapsize and engine was unable to extend mapping while starting read transaction. Environment should be reopened to continue.
    * - Engine was unable to extend mapping during write transaction or explicit call of mdbx_env_set_geometry().
+   *
+   * - Tag: MDBXError.unableExtendMapsize
    */
   case unableExtendMapsize
-  /** Environment or database is not compatible with the requested operation or the specified flags. This can mean:
+  /**
+   * Environment or database is not compatible with the requested operation or the specified flags. This can mean:
    *
    * - The operation expects an MDBX_DUPSORT / MDBX_DUPFIXED database.
    * - Opening a named DB when the unnamed DB has MDBX_DUPSORT / MDBX_INTEGERKEY.
    * - Accessing a data record as a database, or vice versa.
    * - The database was dropped and recreated with different flags.
+   *
+   * - Tag: MDBXError.incompatible
    */
   case incompatible
   /**
    * Invalid reuse of reader locktable slot, e.g. read-transaction already run for current thread
+   *
+   * - Tag: MDBXError.badReadSlot
    */
   case badReadSlot
   /**
    * Transaction is not valid for requested operation, e.g. had errored and be must aborted, has a child, or is invalid
+   *
+   * - Tag: MDBXError.badTransaction
    */
   case badTransaction
   /**
    * Invalid size or alignment of key or data for target database, either invalid subDB name
+   *
+   * - Tag: MDBXError.badValSize
    */
   case badValSize
   /**
    * The specified DBI-handle is invalid or changed by another thread/transaction
+   *
+   * - Tag: MDBXError.badDatabase
    */
   case badDatabase
   /**
    * Unexpected internal error, transaction should be aborted
+   *
+   * - Tag: MDBXError.problem
    */
   case problem
   /**
    * The last LMDB-compatible defined error code
+   *
+   * - Tag: MDBXError.lastLMDBErrorCode
    */
   case lastLMDBErrorCode
   /**
    * Another write transaction is running or environment is already used while opening with MDBX_EXCLUSIVE flag
+   *
+   * - Tag: MDBXError.busy
    */
   case busy
   /**
    * The first of MDBX-added error codes
+   *
+   * - Tag: MDBXError.firstAddedErrorCode
    */
   case firstAddedErrorCode
   /**
    * The specified key has more than one associated value
+   *
+   * - Tag: MDBXError.multipleValues
    */
   case multipleValues
   /**
@@ -171,41 +223,56 @@ enum MDBXError: LocalizedError {
    * This can mean:
    * - memory corruption or double-free;
    * - ABI version mismatch (rare case);
+   *
+   * - Tag: MDBXError.badSignature
    */
   case badSignature
   /**
    * Database should be recovered, but this could NOT be done for now since it opened in read-only mode
+   *
+   * - Tag: MDBXError.wannaRecovery
    */
   case wannaRecovery
   /**
    * The given key value is mismatched to the current cursor position
+   *
+   * - Tag: MDBXError.keyMismatch
    */
   case keyMismatch
   /**
    * Database is too large for current system, e.g. could NOT be mapped into RAM.
+   *
+   * - Tag: MDBXError.tooLarge
    */
   case tooLarge
   /**
    * A thread has attempted to use a not owned object, e.g. a transaction that started by another thread.
+   *
+   * - Tag: MDBXError.threadMismatch
    */
   case threadMismatch
   /**
    * Overlapping read and write transactions for the current thread
+   *
+   * - Tag: MDBXError.transactionsOverlapping
    */
   case transactionsOverlapping
   case lastAddedErrorCode
   /**
    * Environment should be created first
+   *
    * - Tag: MDBXError.notCreated
    */
   case notCreated
   /**
    * Environment was already created
+   *
    * - Tag: MDBXError.alreadyCreated
    */
   case alreadyCreated
   /**
    * Attempt of double-opening of environment
+   * 
    * - Tag: MDBXError.alreadyOpened
    */
   case alreadyOpened
@@ -221,7 +288,7 @@ enum MDBXError: LocalizedError {
   case ENOFILE
   case EREMOTE
   
-  var code: Int32 {
+  public var code: Int32 {
     switch self {
     case .keyExist:                 return libmdbx.MDBX_KEYEXIST.rawValue
     case .firstLMDBErrorCode:       return libmdbx.MDBX_FIRST_LMDB_ERRCODE.rawValue
@@ -272,7 +339,7 @@ enum MDBXError: LocalizedError {
     }
   }
   
-  var errorDescription: String? {
+  public var errorDescription: String? {
     return String(cString: mdbx_strerror(self.code))
   }
 }

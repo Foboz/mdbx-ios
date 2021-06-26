@@ -1,8 +1,9 @@
 //
-//  File.swift
-//  
+//  Other.swift
+//  mdbx-ios-tests
 //
 //  Created by Nail Galiaskarov on 5/3/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import Foundation
