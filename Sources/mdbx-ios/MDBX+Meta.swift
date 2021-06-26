@@ -1,15 +1,20 @@
 //
-//  File.swift
-//  
+//  MDBX+Meta.swift
+//  mdbx-ios
 //
 //  Created by Nail Galiaskarov on 4/20/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import Foundation
 import libmdbx
 
-/** \brief The shortcut to calling \ref mdbx_dbi_flags_ex() with `state=NULL`
- * for discarding it result. \ingroup c_statinfo */
+/**
+ * The shortcut to calling \ref mdbx_dbi_flags_ex() with `state=NULL`
+ * for discarding it result.
+ *
+ * - Tag: MDBX+Meta.databaseFlags
+ */
 public func databaseFlags(transaction: MDBXTransaction, database: MDBXDatabase, flags: inout MDBXDatabaseFlags) throws {
   var rawValue: UInt32 = 0
   try withUnsafeMutablePointer(to: &rawValue) { pointer in

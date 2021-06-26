@@ -1,8 +1,9 @@
 //
-//  File.swift
-//  
+//  MDBXTests.swift
+//  mdbx-ios-tests
 //
 //  Created by Mikhail Nikanorov on 4/19/21.
+//  Copyright © 2021 MyEtherWallet Inc. All rights reserved.
 //
 
 import XCTest
