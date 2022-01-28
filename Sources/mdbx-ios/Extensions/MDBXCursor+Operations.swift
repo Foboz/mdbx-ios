@@ -238,4 +238,9 @@ public extension MDBXCursor {
         }
     }
   }
+  
+  // TODO: To add get batch
+  //  func getBatch() {
+  //    mdbx_cursor_get_batch
+  //  }
 }

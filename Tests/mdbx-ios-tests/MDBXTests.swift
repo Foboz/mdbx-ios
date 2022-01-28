@@ -599,7 +599,7 @@ final class MDBXTests: XCTestCase {
       
       try writeData(key: key, value: value, commit: false)
       let latency = try _transaction!.commitEx()
-      XCTAssert(latency.write < 10)
+      XCTAssert(latency.write < 40)
     } catch {
       XCTFail(error.localizedDescription)
     }

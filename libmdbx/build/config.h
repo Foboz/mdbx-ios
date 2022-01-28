@@ -43,7 +43,7 @@
 
 /* Build Info */
 #ifndef MDBX_BUILD_TIMESTAMP
-#define MDBX_BUILD_TIMESTAMP "2021-06-19T08:01:55Z"
+#define MDBX_BUILD_TIMESTAMP "2022-01-28T00:18:42Z"
 #endif
 #ifndef MDBX_BUILD_TARGET
 #define MDBX_BUILD_TARGET "Darwin-iOS"
@@ -52,12 +52,12 @@
 #define MDBX_BUILD_TYPE "<CONFIGURATION DEPENDENT>"
 #endif
 #ifndef MDBX_BUILD_COMPILER
-#define MDBX_BUILD_COMPILER "Apple clang version 12.0.5 (clang-1205.0.22.9)"
+#define MDBX_BUILD_COMPILER "Apple clang version 13.0.0 (clang-1300.0.29.30)"
 #endif
 #ifndef MDBX_BUILD_FLAGS
 #define MDBX_BUILD_FLAGS " -fexceptions -fcxx-exceptions -frtti -fno-common -ggdb -Wno-unknown-pragmas -Wall -Wextra -Werror -flto=thin LIBMDBX_EXPORTS MDBX_BUILD_SHARED_LIBRARY=1 -ffast-math -fvisibility=hidden"
 #endif
-#define MDBX_BUILD_SOURCERY e4c4106edee75d515bad2a94bacb95f28567ab8fc513f4a25a1546d95df5442e_v0_10_1_15_g63e7276
+#define MDBX_BUILD_SOURCERY 0ffd3bf38f658d78dcbdee64238601b334a98ee598125e6a2789f85560e4e5ae_v0_11_3_0_gf836c928
 
 /* *INDENT-ON* */
 /* clang-format on */

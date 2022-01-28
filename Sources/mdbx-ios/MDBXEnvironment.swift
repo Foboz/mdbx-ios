@@ -574,6 +574,180 @@ public class MDBXEnvironment {
     throw error
   }
   
+  /** \brief Get threshold to force flush the data buffers to disk, even any of
+   * \ref MDBX_SAFE_NOSYNC flag in the environment.
+   * \ingroup c_statinfo
+   * \see mdbx_env_set_syncbytes() \see MDBX_opt_sync_bytes
+   *
+   * \param [in] env       An environment handle returned
+   *                       by \ref mdbx_env_create().
+   * \param [out] threshold  Address of an size_t to store
+   *                         the number of bytes of summary changes when
+   *                         a synchronous flush would be made.
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_EINVAL   An invalid parameter was specified. */
+  public func getSyncBytes() throws {
+    guard self._state != .unknown else { return }
+    
+    var value: Int = 0
+    let code = mdbx_env_get_syncbytes(self._env, &value)
+    
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Sets threshold to force flush the data buffers to disk, even any of
+   * \ref MDBX_SAFE_NOSYNC flag in the environment.
+   * \ingroup c_settings
+   * \see mdbx_env_get_syncbytes \see MDBX_opt_sync_bytes
+   *
+   * The threshold value affects all processes which operates with given
+   * environment until the last process close environment or a new value will be
+   * settled.
+   *
+   * Data is always written to disk when \ref mdbx_txn_commit() is called, but
+   * the operating system may keep it buffered. MDBX always flushes the OS buffers
+   * upon commit as well, unless the environment was opened with
+   * \ref MDBX_SAFE_NOSYNC, \ref MDBX_UTTERLY_NOSYNC
+   * or in part \ref MDBX_NOMETASYNC.
+   *
+   * The default is 0, than mean no any threshold checked, and no additional
+   * flush will be made.
+   *
+   * \param [in] env         An environment handle returned by mdbx_env_create().
+   * \param [in] threshold   The size in bytes of summary changes when
+   *                         a synchronous flush would be made.
+   *
+   * \returns A non-zero error value on failure and 0 on success. */
+  public func setSyncBytes(threashold: Int) throws {
+    guard self._state != .unknown else { return }
+    
+    let code = mdbx_env_set_syncbytes(self._env, threashold)
+    
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Get relative period since the last unsteady commit to force flush
+   * the data buffers to disk, even of \ref MDBX_SAFE_NOSYNC flag in the
+   * environment.
+   * \ingroup c_statinfo
+   * \see mdbx_env_set_syncperiod() \see MDBX_opt_sync_period
+   *
+   * \param [in] env       An environment handle returned
+   *                       by \ref mdbx_env_create().
+   * \param [out] period_seconds_16dot16  Address of an size_t to store
+   *                                      the period in 1/65536 of second when
+   *                                      a synchronous flush would be made since
+   *                                      the last unsteady commit.
+   *
+   * \returns A non-zero error value on failure and 0 on success,
+   *          some possible errors are:
+   * \retval MDBX_EINVAL   An invalid parameter was specified. */
+  public func getSyncPeriod() throws -> UInt32 {
+    guard self._state != .unknown else { throw MDBXError.notCreated }
+    
+    var value: UInt32 = 0
+    let code = mdbx_env_get_syncperiod(self._env, &value)
+    
+    guard code != 0, let error = MDBXError(code: code) else { return value }
+    throw error
+  }
+  
+  /** \brief Sets relative period since the last unsteady commit to force flush
+   * the data buffers to disk, even of \ref MDBX_SAFE_NOSYNC flag in the
+   * environment.
+   * \ingroup c_settings
+   * \see mdbx_env_get_syncperiod \see MDBX_opt_sync_period
+   *
+   * The relative period value affects all processes which operates with given
+   * environment until the last process close environment or a new value will be
+   * settled.
+   *
+   * Data is always written to disk when \ref mdbx_txn_commit() is called, but the
+   * operating system may keep it buffered. MDBX always flushes the OS buffers
+   * upon commit as well, unless the environment was opened with
+   * \ref MDBX_SAFE_NOSYNC or in part \ref MDBX_NOMETASYNC.
+   *
+   * Settled period don't checked asynchronously, but only by the
+   * \ref mdbx_txn_commit() and \ref mdbx_env_sync() functions. Therefore, in
+   * cases where transactions are committed infrequently and/or irregularly,
+   * polling by \ref mdbx_env_sync() may be a reasonable solution to timeout
+   * enforcement.
+   *
+   * The default is 0, than mean no any timeout checked, and no additional
+   * flush will be made.
+   *
+   * \param [in] env   An environment handle returned by \ref mdbx_env_create().
+   * \param [in] seconds_16dot16  The period in 1/65536 of second when
+   *                              a synchronous flush would be made since
+   *                              the last unsteady commit.
+   *
+   * \returns A non-zero error value on failure and 0 on success. */
+  public func setSyncPeriod(_ period: UInt32) throws {
+    guard self._state != .unknown else { throw MDBXError.notCreated }
+    
+    let code = mdbx_env_set_syncperiod(self._env, period)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief Flush the environment data buffers to disk.
+   * \ingroup c_extra
+   *
+   * Unless the environment was opened with no-sync flags (\ref MDBX_NOMETASYNC,
+   * \ref MDBX_SAFE_NOSYNC and \ref MDBX_UTTERLY_NOSYNC), then
+   * data is always written an flushed to disk when \ref mdbx_txn_commit() is
+   * called. Otherwise \ref mdbx_env_sync() may be called to manually write and
+   * flush unsynced data to disk.
+   *
+   * Besides, \ref mdbx_env_sync_ex() with argument `force=false` may be used to
+   * provide polling mode for lazy/asynchronous sync in conjunction with
+   * \ref mdbx_env_set_syncbytes() and/or \ref mdbx_env_set_syncperiod().
+   *
+   * \note This call is not valid if the environment was opened with MDBX_RDONLY.
+   *
+   * \param [in] env      An environment handle returned by \ref mdbx_env_create()
+   * \param [in] force    If non-zero, force a flush. Otherwise, If force is
+   *                      zero, then will run in polling mode,
+   *                      i.e. it will check the thresholds that were
+   *                      set \ref mdbx_env_set_syncbytes()
+   *                      and/or \ref mdbx_env_set_syncperiod() and perform flush
+   *                      if at least one of the thresholds is reached.
+   *
+   * \param [in] nonblock Don't wait if write transaction
+   *                      is running by other thread.
+   *
+   * \returns A non-zero error value on failure and \ref MDBX_RESULT_TRUE or 0 on
+   *     success. The \ref MDBX_RESULT_TRUE means no data pending for flush
+   *     to disk, and 0 otherwise. Some possible errors are:
+   *
+   * \retval MDBX_EACCES   the environment is read-only.
+   * \retval MDBX_BUSY     the environment is used by other thread
+   *                       and `nonblock=true`.
+   * \retval MDBX_EINVAL   an invalid parameter was specified.
+   * \retval MDBX_EIO      an error occurred during synchronization. */
+  public func sync(force: Bool = true, nonBlock: Bool = false) throws {
+    guard self._state != .unknown else { throw MDBXError.notCreated }
+    
+    let code = mdbx_env_sync_ex(self._env, force, nonBlock)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
+  /** \brief The shortcut to calling \ref mdbx_env_sync_ex() with
+   * the `force=false` and `nonblock=true` arguments.
+   * \ingroup c_extra */
+  public func poll() throws {
+    guard self._state != .unknown else { throw MDBXError.notCreated }
+    
+    let code = mdbx_env_sync_poll(self._env)
+    guard code != 0, let error = MDBXError(code: code) else { return }
+    throw error
+  }
+  
   // MARK: - Private
   
   private func cSetHandleSlowReaders(_ block: (@escaping @convention(block) (OpaquePointer?, OpaquePointer?, pid_t, pthread_t?, UInt64, UInt32, Int, Int32) -> Int32)) -> (@convention(c) (OpaquePointer?, OpaquePointer?, pid_t, pthread_t?, UInt64, UInt32, Int, Int32) -> Int32) {

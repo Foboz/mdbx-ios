@@ -4,11 +4,11 @@
 #include "internals.h"
 
 #if MDBX_VERSION_MAJOR != 0 ||                             \
-    MDBX_VERSION_MINOR != 10
+    MDBX_VERSION_MINOR != 11
 #error "API version mismatch! Had `git fetch --tags` done?"
 #endif
 
-static const char sourcery[] = STRINGIFY(MDBX_BUILD_SOURCERY);
+static const char sourcery[] = MDBX_STRINGIFY(MDBX_BUILD_SOURCERY);
 
 __dll_export
 #ifdef __attribute_used__
@@ -24,11 +24,11 @@ __dll_export
 #endif
     const struct MDBX_version_info mdbx_version = {
         0,
-        10,
-        1,
-        15,
-        {"2021-06-18T15:13:51+03:00", "1c2ca15627c5c4e72657c00530c8a9a71ccd5128", "63e7276c7da864d47c004cc959dd8c6b1731c247",
-         "v0.10.1-15-g63e7276"},
+        11,
+        3,
+        0,
+        {"2021-12-31T11:52:40+03:00", "84e7a7a4bb7239ac839d77514b948492d87eeea8", "f836c928a828c5de0c82f38ad1d860ad0d4aa852",
+         "v0.11.3-0-gf836c928"},
         sourcery};
 
 __dll_export

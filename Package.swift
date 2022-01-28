@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -36,14 +36,12 @@ let package = Package(
         "build/CMakeCache.txt",
         "build/cmake_install.cmake",
         "build/test",
-        "libmdbx/include",
         "libmdbx/test",
         "libmdbx/packages",
         "libmdbx/example",
         "libmdbx/cmake",
         "libmdbx/docs",
         "libmdbx/CMakeLists.txt",
-        "libmdbx/mdbx_drop.c",
         "libmdbx/mdbx.h++",
         "libmdbx/appveyor.yml",
         "libmdbx/AUTHORS",
@@ -68,6 +66,7 @@ let package = Package(
         "libmdbx/src/mdbx_load.c",
         "libmdbx/src/mdbx_dump.c",
         "libmdbx/src/mdbx.c++",
+        "libmdbx/CMakeSettings.json"
       ],
       sources: [
         "build/version.c",
@@ -92,15 +91,6 @@ let package = Package(
         .define("MDBX_DEBUG", to: "1", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Debug\"", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Release\"", .when(configuration: .release)),
-//        .unsafeFlags([
-//          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
-//          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-//          "-ggdb"
-//        ], .when(configuration: .debug)),
-//        .unsafeFlags([
-//          "-fexceptions", "-fno-common", "-Wno-unknown-pragmas", "-Wall", "-Wextra", "-Werror",
-//          "-flto=thin", "-Wno-error=shorten-64-to-32", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-//        ], .when(configuration: .release)),
       ],
       cxxSettings: [
         .headerSearchPath("."),
@@ -119,16 +109,6 @@ let package = Package(
         .define("MDBX_DEBUG", to: "1", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Debug\"", .when(configuration: .debug)),
         .define("MDBX_BUILD_TYPE", to: "\"Release\"", .when(configuration: .release)),
-//        .unsafeFlags([
-//          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
-//          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-fPIC", "-ffast-math", "-fvisibility=hidden",
-//          "-g"
-//        ], .when(configuration: .debug)),
-//        .unsafeFlags([
-//          "-fexceptions", "-fcxx-exceptions", "-frtti", "-fno-common", "-Wno-unknown-pragmas",
-//          "-Wall", "-Wextra", "-Werror", "-flto=thin", "-DNDEBUG", "-fPIC", "-ffast-math",
-//          "-fvisibility=hidden",
-//        ], .when(configuration: .release)),
       ],
       linkerSettings: [
         .linkedLibrary("c++")
@@ -136,5 +116,5 @@ let package = Package(
     )
   ],
   cLanguageStandard: .gnu11,
-  cxxLanguageStandard: .gnucxx1z
+  cxxLanguageStandard: .gnucxx17
 )
