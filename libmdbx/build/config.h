@@ -43,7 +43,7 @@
 
 /* Build Info */
 #ifndef MDBX_BUILD_TIMESTAMP
-#define MDBX_BUILD_TIMESTAMP "2022-01-28T00:18:42Z"
+#define MDBX_BUILD_TIMESTAMP "2022-03-03T00:35:21Z"
 #endif
 #ifndef MDBX_BUILD_TARGET
 #define MDBX_BUILD_TARGET "Darwin-iOS"
@@ -57,7 +57,7 @@
 #ifndef MDBX_BUILD_FLAGS
 #define MDBX_BUILD_FLAGS " -fexceptions -fcxx-exceptions -frtti -fno-common -ggdb -Wno-unknown-pragmas -Wall -Wextra -Werror -flto=thin LIBMDBX_EXPORTS MDBX_BUILD_SHARED_LIBRARY=1 -ffast-math -fvisibility=hidden"
 #endif
-#define MDBX_BUILD_SOURCERY 0ffd3bf38f658d78dcbdee64238601b334a98ee598125e6a2789f85560e4e5ae_v0_11_3_0_gf836c928
+#define MDBX_BUILD_SOURCERY 6c4d894dab57b371b97f4deffd0943e367692232b8ace053cec44fd1aae843da_v0_11_5_0_gd01e44db
 
 /* *INDENT-ON* */
 /* clang-format on */

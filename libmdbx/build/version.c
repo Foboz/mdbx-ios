@@ -25,10 +25,10 @@ __dll_export
     const struct MDBX_version_info mdbx_version = {
         0,
         11,
-        3,
+        5,
         0,
-        {"2021-12-31T11:52:40+03:00", "84e7a7a4bb7239ac839d77514b948492d87eeea8", "f836c928a828c5de0c82f38ad1d860ad0d4aa852",
-         "v0.11.3-0-gf836c928"},
+        {"2022-02-23T20:06:30+03:00", "68aed41e918246f54556dda5cfce00bceaff279b", "d01e44db0ca74724d3d6053807201dc544352c2b",
+         "v0.11.5-0-gd01e44db"},
         sourcery};
 
 __dll_export
