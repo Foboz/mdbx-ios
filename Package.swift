@@ -31,11 +31,6 @@ let package = Package(
       name: "libmdbx",
       path: "libmdbx",
       exclude: [
-        "build/CMakeFiles",
-        "build/CMakeScripts",
-        "build/CMakeCache.txt",
-        "build/cmake_install.cmake",
-        "build/test",
         "libmdbx/test",
         "libmdbx/packages",
         "libmdbx/example",
