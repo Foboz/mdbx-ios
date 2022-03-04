@@ -30,6 +30,7 @@ public class MDBXEnvironment {
     case unknown
     case created
     case opened
+    case restored
   }
   
   internal var _env: MDBX_env!
@@ -39,7 +40,7 @@ public class MDBXEnvironment {
   
   internal init(_ env: MDBX_env) {
     self._env = env
-    self._state = .opened
+    self._state = .restored
   }
   
   deinit {
