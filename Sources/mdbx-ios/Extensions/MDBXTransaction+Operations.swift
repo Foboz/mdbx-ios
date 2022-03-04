@@ -50,10 +50,11 @@ public extension MDBXTransaction {
         var data: MDBX_val = .init()
         let code = mdbx_get(_txn, database._dbi, &mdbxKey, &data)
         guard code != 0, let error = MDBXError(code: code) else {
-          guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+          if mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue {
+            return data.dataNoCopy
+          } else {
             return data.data
           }
-          return data.dataNoCopy
         }
         
         throw error
@@ -106,10 +107,11 @@ public extension MDBXTransaction {
         key = mdbxKey.data
       }
       guard code != 0, let error = MDBXError(code: code) else {
-        guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+        if mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue {
+          return data.dataNoCopy
+        } else {
           return data.data
         }
-        return data.dataNoCopy
       }
 
       throw error
@@ -165,10 +167,11 @@ public extension MDBXTransaction {
       }
 
       guard code != 0, let error = MDBXError(code: code) else {
-        guard mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+        if mdbx_is_dirty(_txn, data.iov_base) == MDBX_RESULT_FALSE.rawValue {
+          return data.dataNoCopy
+        } else {
           return data.data
         }
-        return data.dataNoCopy
       }
 
       throw error
@@ -416,10 +419,11 @@ public extension MDBXTransaction {
         let code = mdbx_replace(_txn, database._dbi, &mdbxKey, &newMdbxValue, &oldMdbxValue, flags.MDBX_put_flags_t)
         
         guard code != 0, let error = MDBXError(code: code) else {
-          guard mdbx_is_dirty(_txn, oldMdbxValue.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+          if mdbx_is_dirty(_txn, oldMdbxValue.iov_base) == MDBX_RESULT_FALSE.rawValue {
+            return oldMdbxValue.dataNoCopy
+          } else {
             return oldMdbxValue.data
           }
-          return oldMdbxValue.dataNoCopy
         }
 
         throw error

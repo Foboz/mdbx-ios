@@ -16,13 +16,7 @@ public final class MDBXCursor {
   
   public var transaction: MDBXTransaction {
     get throws {
-      guard let txn = mdbx_cursor_txn(_cursor) else {
-        throw MDBXError.badTransaction
-      }
-      let transaction = try MDBXTransaction(txn)
-      transaction._txn = txn
-      
-      return transaction
+      return try MDBXTransaction(self)
     }
   }
   

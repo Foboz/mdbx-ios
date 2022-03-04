@@ -74,16 +74,25 @@ public final class MDBXTransaction {
   
   /**
    * - Parameters:
-   *   - txn:
-   *     Transaction handler
+   *   - cursor:
+   *     Cursor to transaction handler
    * - Throws:
    *    - badTransaction:
    *      Invalid transction
    */
-  internal init(_ txn: MDBX_txn) throws {
+  internal init(_ cursor: MDBXCursor) throws {
+    var txn: MDBX_txn!
+    withUnsafeMutablePointer(to: &txn) { pointer in
+      pointer.pointee = mdbx_cursor_txn(cursor._cursor)
+    }
     self._txn = txn
-    guard let env = mdbx_txn_env(txn) else {
+    guard txn != nil else {
       throw MDBXError.badTransaction
+    }
+    
+    var env: MDBX_env!
+    withUnsafeMutablePointer(to: &env) { pointer in
+      pointer.pointee = mdbx_txn_env(txn)
     }
     self.environment = MDBXEnvironment(env)
   }

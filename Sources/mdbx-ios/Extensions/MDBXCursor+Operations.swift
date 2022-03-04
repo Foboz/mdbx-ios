@@ -123,10 +123,11 @@ public extension MDBXCursor {
       }
       
       guard code != 0, let error = MDBXError(code: code) else {
-        guard mdbx_is_dirty(txn, mdbxData.iov_base) == MDBX_RESULT_FALSE.rawValue else {
+        if mdbx_is_dirty(txn, mdbxData.iov_base) == MDBX_RESULT_FALSE.rawValue {
+          return mdbxData.dataNoCopy
+        } else {
           return mdbxData.data
         }
-        return mdbxData.dataNoCopy
       }
       
       throw error
