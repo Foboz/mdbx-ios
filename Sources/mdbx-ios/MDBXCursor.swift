@@ -14,6 +14,18 @@ internal typealias MDBX_cursor = OpaquePointer
 public final class MDBXCursor {
   internal var _cursor: MDBX_cursor!
   
+  public var transaction: MDBXTransaction {
+    get throws {
+      guard let txn = mdbx_cursor_txn(_cursor) else {
+        throw MDBXError.badTransaction
+      }
+      let transaction = try MDBXTransaction(txn)
+      transaction._txn = txn
+      
+      return transaction
+    }
+  }
+  
   public init() {}
   
   /** \brief Create a cursor handle but not bind it to transaction nor DBI handle.
@@ -320,14 +332,6 @@ public final class MDBXCursor {
     }
     throw error
   }
-  
-//  public func transaction() -> MDBXTransaction {
-//    let txn = mdbx_cursor_txn(_cursor)
-//    let transaction = MDBXTransaction(<#MDBXEnvironment#>)
-//    transaction._txn = txn
-//    
-//    return transaction
-//  }
 
   /** \brief Close a cursor handle.
    * \ingroup c_cursors

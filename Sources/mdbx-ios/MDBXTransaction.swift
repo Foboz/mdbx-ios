@@ -73,6 +73,22 @@ public final class MDBXTransaction {
   }
   
   /**
+   * - Parameters:
+   *   - txn:
+   *     Transaction handler
+   * - Throws:
+   *    - badTransaction:
+   *      Invalid transction
+   */
+  internal init(_ txn: MDBX_txn) throws {
+    self._txn = txn
+    guard let env = mdbx_txn_env(txn) else {
+      throw MDBXError.badTransaction
+    }
+    self.environment = MDBXEnvironment(env)
+  }
+  
+  /**
    * Create a transaction with a user provided context pointer for use with the environment.
    *
    * The transaction handle may be discarded using \ref mdbx_txn_abort() or \ref mdbx_txn_commit().

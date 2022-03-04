@@ -37,6 +37,11 @@ public class MDBXEnvironment {
   
   public init() {}
   
+  internal init(_ env: MDBX_env) {
+    self._env = env
+    self._state = .opened
+  }
+  
   deinit {
     if _state == .opened {
       self.close()
